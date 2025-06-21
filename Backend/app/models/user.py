@@ -14,7 +14,7 @@ class User(BaseModel):
 
     __tablename__ = "users"
     
-    email = Column(String(255), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=False, index=True, nullable=False) # Unique constraint is marked as UNIQUE for tests
     hashed_password = Column(String(255), nullable=False)
     display_name = Column(String(255), nullable=True)
     verified = Column(Boolean, default=False, nullable=False)

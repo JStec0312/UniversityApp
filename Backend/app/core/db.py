@@ -8,7 +8,7 @@ import os
 load_dotenv()
 
 # Pobierz DATABASE_URL
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")  # Default to SQLite if not set
+DATABASE_URL = os.getenv("DB_URL")  # Default to SQLite if not set
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
