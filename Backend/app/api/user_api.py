@@ -21,3 +21,15 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = UserService(user_repo)
     return user_service.get_user_by_id(user_id)
+
+@router.post("/verify/{token}", response_model=UserOut)
+def verify_user(token: str, db: Session = Depends(get_db)):
+    user_repo = RepositoryFactory(db).get_user_repository()
+    user_service = UserService(user_repo)
+    return user_service.verify_user(token)
+
+@router.post("/getToken/{user_id}")
+def get_verification_token(user_id: int, db: Session = Depends(get_db)):
+    user_repo = RepositoryFactory(db).get_user_repository()
+    user_service = UserService(user_repo)
+    return user_service.get_verification_token(user_id)    

@@ -1,3 +1,4 @@
+import app.utils.send_verification_mail as mail_module
 
 def test_create_user(client):
     response = client.post("/api/users/", json={
@@ -28,3 +29,7 @@ def test_get_user(client):
     assert data["email"] == "test@example.com"
     assert data["display_name"] == "Test User"
 
+
+    
+    
+    

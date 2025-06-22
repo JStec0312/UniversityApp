@@ -14,7 +14,13 @@ class UserRepository(BaseRepository[User]):
         return self.db.query(self.model).filter(self.model.display_name == username).all()
     
     def verify_user(self,  id: int) -> User | None:
-        return self.db.query(self.model).filter(self.model.id == id).update({"verified": True})
+        user = self.get_by_id(id)
+        if user:
+            user.verified = True
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        return None
 
     
 
