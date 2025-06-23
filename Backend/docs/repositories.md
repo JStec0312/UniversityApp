@@ -366,3 +366,64 @@ def create_event_and_rsvp(db: Session, event_data: dict, user_id: int):
     
     return created_event
 ```
+
+## Best Practices for Repository Pattern
+
+### Handling Circular Imports
+
+When dealing with related models like Admin and Group where they reference each other, circular imports can become an issue. Here are strategies to handle them:
+
+1. **Use string-based relationship references**:
+   ```python
+   # In the Admin model
+   group = relationship("Group", back_populates="admins")
+   
+   # In the Group model
+   admins = relationship("Admin", back_populates="group")
+   ```
+
+2. **Use explicit foreign key declarations in relationships**:
+   ```python
+   # In models with potential circular dependencies
+   group = relationship("Group", foreign_keys=[group_id], back_populates="admins")
+   ```
+
+3. **Repository Factory Implementation**:
+   To avoid circular imports in repository implementations, use lazy imports:
+   ```python
+   class RepositoryFactory:
+       @staticmethod
+       def get_user_repository(db):
+           # Import inside method to avoid circular imports
+           from app.repositories.user_repository import UserRepository
+           return UserRepository(db)
+   ```
+
+### Unit Testing Repositories
+
+When testing repositories, use an in-memory SQLite database:
+
+```python
+# In conftest.py
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.core.db import Base
+
+@pytest.fixture
+def test_db():
+    SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///:memory:"
+    engine = create_engine(SQLALCHEMY_TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    
+    # Create tables
+    Base.metadata.create_all(bind=engine)
+    
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        # Drop tables after test
+        Base.metadata.drop_all(bind=engine)
+```

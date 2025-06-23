@@ -71,11 +71,32 @@ The Admin model extends the User entity with admin-specific attributes.
 class Admin(BaseModel):
     __tablename__ = "admins"
     
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
-    role = Column(String(50), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
     
     # Relationships
     user = relationship("User", back_populates="admin")
+    group = relationship("Group", foreign_keys=[group_id], back_populates="admins")
+    news = relationship("News", back_populates="admin")
+    events = relationship("Event", back_populates="admin")
+    discounts = relationship("Discount", back_populates="admin")
+```
+
+## Group Model
+
+The Group model represents student organizations, clubs, and administrative groups.
+
+```python
+class Group(BaseModel):
+    __tablename__ = "groups"
+    
+    university_id = Column(Integer, ForeignKey("universities.id"), nullable=False)
+    group_name = Column(String(100), nullable=False)
+
+    # Relationships
+    university = relationship("University", back_populates="groups")
+    admins = relationship("Admin", back_populates="group")
+    superior_groups = relationship("SuperiorGroup", back_populates="group")
 ```
 
 ### Methods

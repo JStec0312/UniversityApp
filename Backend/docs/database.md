@@ -21,16 +21,22 @@ This document outlines the database schema for the UniversityApp.
       │                   │                   
 ┌───────────┐       ┌───────────┐       ┌───────────┐
 │           │       │           │       │           │
-│  Admins   │       │   News    │       │  Events   │
+│  Admins   │───────│  Groups   │       │  Events   │
 │           │       │           │       │           │
 └───────────┘       └───────────┘       └───────────┘
-                                              │
-                                              │
+      │                                       │
+      │                                       │
 ┌───────────┐       ┌───────────┐       ┌───────────┐
 │           │       │           │       │           │
-│ForumPosts │       │ Discounts │       │EventRSVPs │
+│   News    │       │ Discounts │       │EventRSVPs │
 │           │       │           │       │           │
 └───────────┘       └───────────┘       └───────────┘
+
+┌───────────┐       
+│           │       
+│ForumPosts │       
+│           │       
+└───────────┘       
 ```
 
 ## Tables
@@ -65,6 +71,17 @@ Extends the User entity with student-specific attributes.
 | created_at       | DateTime     | Not Null, Default: now     |
 | updated_at       | DateTime     | Not Null, Default: now     |
 
+### Groups
+
+Represents student organizations, clubs, and administrative groups.
+
+| Column           | Type         | Constraints                |
+|------------------|--------------|----------------------------|
+| id               | Integer      | Primary Key, Auto-increment |
+| university_id    | Integer      | Foreign Key, Not Null      |
+| group_name       | String(100)  | Not Null                   |
+| created_at       | DateTime     | Not Null, Default: now     |
+
 ### Admins
 
 Extends the User entity with admin-specific attributes.
@@ -73,9 +90,8 @@ Extends the User entity with admin-specific attributes.
 |------------------|--------------|----------------------------|
 | id               | Integer      | Primary Key, Auto-increment |
 | user_id          | Integer      | Foreign Key, Not Null      |
-| role             | String(50)   | Not Null                   |
+| group_id         | Integer      | Foreign Key, Not Null      |
 | created_at       | DateTime     | Not Null, Default: now     |
-| updated_at       | DateTime     | Not Null, Default: now     |
 
 ### Universities
 

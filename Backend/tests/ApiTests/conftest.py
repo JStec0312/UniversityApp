@@ -3,7 +3,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
+from app.models import *
 from app.main import app
 from app.core.db import get_db
 from app.core.db import Base
@@ -41,3 +41,25 @@ def clean_db():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     yield
+
+@pytest.fixture(scope= "function")
+def test_data():
+    db = TestingSessionLocal()
+
+    # Tworzenie rekordów
+    university = University(id=1, name="Test University")
+    faculty = Faculty(id=1, name="Test Faculty", university_id=1)
+    major = Major(id=1, name="Test Major", faculty_id=1)
+    group = Group(university_id=1, group_name="Test Group")
+
+    db.add_all([university, faculty, major, group])
+    db.commit()
+
+    yield db  # pozwala korzystać z bazy w testach
+
+    db.close()
+    for table in reversed(Base.metadata.sorted_tables):
+        db.execute(table.delete())
+    db.commit()
+    db.close()
+

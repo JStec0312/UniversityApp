@@ -12,3 +12,5 @@ class University(BaseModel):
     
     faculties = relationship("Faculty", back_populates="university")
     users = relationship("User", back_populates="university")
+    groups = relationship("Group", back_populates="university")
+    superior_groups = relationship("SuperiorGroup", back_populates="university")  # ✅ dodaj to

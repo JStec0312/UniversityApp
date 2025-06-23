@@ -1,11 +1,13 @@
 from fastapi import HTTPException
 from app.models.user import User
 from app.schemas.user import UserCreate
+from app.schemas.user import VerificationInfoIn
 from app.repositories.user_repository import UserRepository
 from passlib.hash import bcrypt
 from app.utils.generate_verification_token import generate_verification_token
 from app.utils.send_verification_mail import send_verification_email
 from jose import jwt,JWTError
+
 import os
 SECRET_KEY = os.getenv("JWT_SECRET")
 class UserService:
@@ -21,7 +23,9 @@ class UserService:
             user = User(
                 email=user_data.email,
                 hashed_password=hashed_password,
-                display_name=user_data.display_name
+                display_name=user_data.display_name,
+                university_id=user_data.university_id,
+
             )
             new_user =  self.user_repository.create(user)
             token = generate_verification_token(new_user.id)
@@ -47,7 +51,7 @@ class UserService:
             raise HTTPException(status_code=500, detail=str(e))  
         
     
-    def verify_user(self, token: str) -> User:
+    def verify_user(self, token: str, verification_info: VerificationInfoIn) -> User:
         try: 
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"] )
             user_id = payload.get("sub")
@@ -63,7 +67,20 @@ class UserService:
             raise HTTPException(status_code=400, detail="User already verified")
         
         try:
-            self.user_repository.verify_user(user_id)
+            if verification_info.role == "student":
+                self.user_repository.create_student(
+                    user_id=user.id,
+                    faculty_id=verification_info.faculty_id,
+                    major_id=verification_info.major_id
+                )
+            else:
+                self.user_repository.create_admin(
+                    user_id=user.id,
+                    group_id=verification_info.group_id,
+                    faculty_id=verification_info.faculty_id,
+                    major_id=verification_info.major_id
+                )
+            self.user_repository.verify_user(user_id)    
             return user
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))

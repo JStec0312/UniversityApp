@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.core.db import Base
 from app.models import (
-    user, student, admin, news, event, event_rsvp, discount, forum_post, university, faculty, major
+    user, student, admin, news, event, event_rsvp, discount, forum_post, university, faculty, major, group, superior_group
 )
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"  # baza tylko w RAM → idealne do testów Repo

@@ -5,7 +5,7 @@ from app.core.db import Base
 from app.models.base import BaseModel
 
 class User(BaseModel):
-    def __init__(self, email: str, hashed_password: str, display_name: str = None, verified: bool = False, university_id: int = None):
+    def __init__(self, email: str, hashed_password: str,   display_name: str = None, verified: bool = False, university_id: int = None):
         self.email = email
         self.hashed_password = hashed_password
         self.display_name = display_name
@@ -18,7 +18,7 @@ class User(BaseModel):
     hashed_password = Column(String(255), nullable=False)
     display_name = Column(String(255), nullable=True)
     verified = Column(Boolean, default=False, nullable=False)
-    university_id = Column(Integer, ForeignKey("universities.id"), nullable=True)
+    university_id = Column(Integer, ForeignKey("universities.id"), nullable=False)
 
     
     # Relationships

@@ -5,14 +5,15 @@ from app.models.base import BaseModel
 
 
 class Admin(BaseModel):
-    """Admin model"""
     __tablename__ = "admins"
     
     user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
-    group_type = Column(String(255))  # e.g., "Samorząd", "Koło Naukowe", etc.
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
     
-    # Relationships
     user = relationship("User", back_populates="admin")
+    # Use string reference to avoid circular import
+    group = relationship("Group", foreign_keys=[group_id], back_populates="admins")
+    
     news = relationship("News", back_populates="admin")
     events = relationship("Event", back_populates="admin")
     discounts = relationship("Discount", back_populates="admin")

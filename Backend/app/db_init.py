@@ -1,6 +1,18 @@
 from app.core.db import Base, engine
 from app.models import (
-    User, Student, Admin, News, Event, EventRSVP, Discount, ForumPost
+    Admin,
+    Discount,
+    EventRSVP,
+    Event,
+    Faculty,
+    ForumPost,
+    Group,
+    Major,
+    News,
+    Student,
+    SuperiorGroup,
+    University,
+    User
 )
 
 def create_tables():

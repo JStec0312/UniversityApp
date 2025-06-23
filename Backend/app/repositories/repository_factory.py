@@ -7,6 +7,7 @@ from app.repositories.event_repository import EventRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.student_repository import StudentRepository
 from app.repositories.major_repository import MajorRepository
+from app.repositories.admin_repository import AdminRepository
 
 
 
@@ -34,6 +35,9 @@ class RepositoryFactory:
     
     def get_student_repository(self) -> StudentRepository:
         return StudentRepository(self.db)
+
+    def get_admin_repository(self) -> AdminRepository:
+        return AdminRepository(self.db)
     
     def get_major_repository(self) -> MajorRepository:
         return MajorRepository(self.db)
