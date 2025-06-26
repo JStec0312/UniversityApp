@@ -5,6 +5,10 @@ from app.models.base import BaseModel
 
 
 class Admin(BaseModel):
+    def __init__(self, user_id:int, group_id:int):
+        self.user_id = user_id
+        self.group_id = group_id
+
     __tablename__ = "admins"
     
     user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)

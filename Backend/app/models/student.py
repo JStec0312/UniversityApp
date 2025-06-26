@@ -4,6 +4,11 @@ from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
 
 class Student(BaseModel):
+    def __init__(self, user_id: int, faculty_id: int = None, major_id: int = None):
+        self.user_id = user_id
+        self.faculty_id = faculty_id
+        self.major_id = major_id
+    
     __tablename__ = "students"
     
     user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)

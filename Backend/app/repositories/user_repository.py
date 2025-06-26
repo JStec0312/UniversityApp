@@ -30,28 +30,27 @@ class UserRepository(BaseRepository[User]):
         return None
 
     def create_student(self, user_id:int,  faculty_id:int = None, major_id:int = None) -> User:
-        existing_student = self.get_by_id(user_id)
-        if existing_student:
+        existing_user = self.get_by_id(user_id)
+        if  existing_user:
             student_repo = StudentRepository(self.db)
             student = Student(
                 user_id=user_id,
                 faculty_id=faculty_id,
                 major_id=major_id
             )
-            student_repo.create(student)
-            return None
+            new_student = student_repo.create(student)
+            return new_student
+        raise ValueError("User does not exist")
     
 
-    def create_admin(self, user_id: int,  group_id: int, faculty_id: int = None, major_id: int = None) -> User:
-        existing_admin = self.get_by_id(user_id)
-        if  existing_admin:
+    def create_admin(self, user_id: int,  group_id: int) -> User:
+        existing_user = self.get_by_id(user_id)
+        if  existing_user:
+            admin_repo = AdminRepository(self.db)
             admin = Admin(
                 user_id=user_id,
                 group_id=group_id,
-                faculty_id=faculty_id,
-                major_id=major_id
             )
-            admin_repo = AdminRepository(self.db)
-            admin_repo.create(admin)
-            return None
+            new_admin = admin_repo.create(admin)
+            return new_admin
     

@@ -1,12 +1,14 @@
 from fastapi import HTTPException
 from app.models.user import User
+from app.models.student import Student
 from app.schemas.user import UserCreate
-from app.schemas.user import VerificationInfoIn
+from app.schemas.student import StudentVerificationIn
 from app.repositories.user_repository import UserRepository
 from passlib.hash import bcrypt
 from app.utils.generate_verification_token import generate_verification_token
 from app.utils.send_verification_mail import send_verification_email
 from jose import jwt,JWTError
+from app.schemas.admin import AdminVerificationIn
 
 import os
 SECRET_KEY = os.getenv("JWT_SECRET")
@@ -51,7 +53,33 @@ class UserService:
             raise HTTPException(status_code=500, detail=str(e))  
         
     
-    def verify_user(self, token: str, verification_info: VerificationInfoIn) -> User:
+    def verify_student(self, token: str, verification_info: StudentVerificationIn) -> User:
+        try: 
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"] )
+            user_id = payload.get("sub")
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        user = self.user_repository.get_by_id(user_id)
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        if user.verified:
+            raise HTTPException(status_code=400, detail="User already verified")
+        
+        try:
+            self.user_repository.create_student(
+                user_id=user.id,
+                faculty_id=verification_info.faculty_id,
+                major_id=verification_info.major_id
+            )
+
+            self.user_repository.verify_user(user_id)   
+            return user
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+        
+    def verify_admin(self, token: str, verification_info: AdminVerificationIn) -> User:
         try: 
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"] )
             user_id = payload.get("sub")
@@ -67,24 +95,16 @@ class UserService:
             raise HTTPException(status_code=400, detail="User already verified")
         
         try:
-            if verification_info.role == "student":
-                self.user_repository.create_student(
-                    user_id=user.id,
-                    faculty_id=verification_info.faculty_id,
-                    major_id=verification_info.major_id
-                )
-            else:
-                self.user_repository.create_admin(
-                    user_id=user.id,
-                    group_id=verification_info.group_id,
-                    faculty_id=verification_info.faculty_id,
-                    major_id=verification_info.major_id
-                )
+            self.user_repository.create_admin(
+                user_id= user_id,
+                group_id=verification_info.group_id,
+            )
             self.user_repository.verify_user(user_id)    
             return user
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
         
+
     def get_verification_token(self, user_id: int) -> str:
         user = self.user_repository.get_by_id(user_id)
         if not user:

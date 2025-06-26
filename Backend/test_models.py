@@ -28,10 +28,7 @@ def test_model_definitions():
         Group, Major, News, Student, SuperiorGroup, University, User
     ]
     
-    for model in models:
-        print(f"Model: {model.__name__}, Table: {model.__tablename__}")
-    
-    print("\nAll models imported successfully!")
+
 
 if __name__ == "__main__":
     test_model_definitions()
