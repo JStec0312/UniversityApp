@@ -90,10 +90,3 @@ def test_verify_admin(client, test_data):
     assert student is None
 
 
-    
-
-    
-
-    
-    
-    

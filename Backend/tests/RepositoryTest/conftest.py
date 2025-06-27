@@ -25,3 +25,4 @@ def db():
         db.close()
         # Czyścimy bazę po teście
         Base.metadata.drop_all(bind=engine)
+

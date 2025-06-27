@@ -1,7 +1,5 @@
 from fastapi import FastAPI
-from app.api import user_api
-from app.api import student_api
-from app.api import admin_api
+from app.api import user_api, student_api, admin_api
 from app.core.db import Base, engine
 
 Base.metadata.create_all(bind=engine)

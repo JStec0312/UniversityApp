@@ -63,3 +63,74 @@ def test_data():
     db.commit()
     db.close()
 
+@pytest.fixture(scope="function")
+def student_data():
+    db = TestingSessionLocal()
+    from passlib.hash import bcrypt
+    hashed_user_password =  bcrypt.hash("testpassword")
+    user = User (
+        email = 'test@gmail.com',
+        hashed_password = hashed_user_password,
+        verified = True,
+        display_name = 'Test User',
+        university_id = 1
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    university = University(id=1, name="Test University")
+    faculty = Faculty(id=1, name="Test Faculty", university_id=1)
+    major = Major(id=1, name="Test Major", faculty_id=1)
+    group = Group(university_id=1, group_name="Test Group")
+
+    db.add_all([university, faculty, major, group])
+    db.commit()
+
+
+
+    student = Student(
+        user_id = user.id,
+        faculty_id = 1,
+        major_id = 1
+    )
+    
+    db.add(student)
+    db.commit()
+    db.refresh(student)
+
+    yield db  # pozwala korzystać z bazy w testach
+
+@pytest.fixture(scope="function")
+def admin_data():
+    db = TestingSessionLocal()
+    from passlib.hash import bcrypt
+    hashed_user_password =  bcrypt.hash("testpassword")
+    user = User (
+        email = 'test@gmail.com',
+        hashed_password = hashed_user_password,
+        verified = True,
+        display_name = 'Test User',
+        university_id = 1
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    university = University(id=1, name="Test University")
+    faculty = Faculty(id=1, name="Test Faculty", university_id=1)
+    major = Major(id=1, name="Test Major", faculty_id=1)
+    group = Group(university_id=1, group_name="Test Group")
+    db.add_all([university, faculty, major, group])
+    db.commit()
+    admin = Admin(
+        user_id = user.id,
+        group_id = 1
+    )
+    db.add(admin)
+    db.commit()
+    db.refresh(admin)
+    yield db
+    # Cleanup
+    db.close()
+
+

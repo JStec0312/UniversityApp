@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.student import Student
+from app.models.user import User
 from app.repositories.base_repository import BaseRepository
 
 class StudentRepository(BaseRepository[Student]):
@@ -25,3 +26,10 @@ class StudentRepository(BaseRepository[Student]):
             self.model.faculty_id == faculty_id
         ).all()
     
+    def get_by_email(self, email: str):
+        return (
+            self.db.query(Student)
+            .join(Student.user)  
+            .filter(User.email == email)
+            .first()
+        )
