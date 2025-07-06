@@ -5,19 +5,15 @@ from app.models.base import BaseModel
 
 
 class Admin(BaseModel):
-    def __init__(self, user_id:int, group_id:int):
-        self.user_id = user_id
-        self.group_id = group_id
-
     __tablename__ = "admins"
     
-    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
-    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)  # One-to-one with User
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)  # Group this admin belongs to
     
-    user = relationship("User", back_populates="admin")
+    user = relationship("User", back_populates="admin")  # Link to the user entity
     # Use string reference to avoid circular import
-    group = relationship("Group", foreign_keys=[group_id], back_populates="admins")
+    group = relationship("Group", foreign_keys=[group_id], back_populates="admins")  # Link to the group
     
-    news = relationship("News", back_populates="admin")
-    events = relationship("Event", back_populates="admin")
-    discounts = relationship("Discount", back_populates="admin")
+    news = relationship("News", back_populates="admin")  # News posts created by this admin
+    events = relationship("Event", back_populates="admin")  # Events created by this admin
+    discounts = relationship("Discount", back_populates="admin")  # Discounts created by this admin

@@ -10,6 +10,15 @@ from pydantic import BaseModel
 from typing import Optional
 
 
+class StudentOut(BaseModel):
+    student_id: int
+    university_id: int
+    user_id: int
+    email: EmailStr
+    display_name: str
+    faculty_id: Optional[int] = None
+    major_id: Optional[int] = None
+
 class StudentAuthIn(BaseModel):
     email: EmailStr
     password: str
@@ -17,12 +26,14 @@ class StudentAuthIn(BaseModel):
 class StudentAuthOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    student: StudentOut
+
+
+class StudentMeOut(BaseModel):
     role: RoleEnum = RoleEnum.STUDENT
-    student_id: int
-    university_id: int
     user_id: int
-    student_id: int
     email: EmailStr
     display_name: str
     faculty_id: Optional[int] = None
     major_id: Optional[int] = None
+    university_id: int

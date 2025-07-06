@@ -13,7 +13,7 @@ def send_verification_email(to_email: str, to_user: str, verification_token: str
 
     Thank you for registering with us! Please click the link below to verify your email address:
 
-    http://{DOMAIN}/api/users/verify?token={verification_token}
+    http://{DOMAIN}/api/user/verify?token={verification_token}
 
     If you did not register, please ignore this email.
 
