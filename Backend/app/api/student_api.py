@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.repositories.repository_factory import RepositoryFactory
@@ -18,10 +18,10 @@ def verify_user(token: str, verification_info: StudentVerificationIn,  db: Sessi
 
 
 @router.post("/student/auth", response_model = StudentAuthOut)
-def authenticate_user(user_auth: StudentAuthIn, db: Session = Depends(get_db)):
+def authenticate_user(user_auth: StudentAuthIn, response: Response, db: Session = Depends(get_db)):
     student_repo = RepositoryFactory(db).get_student_repository()
     student_service = ServiceFactory.get_student_service(student_repo)
-    return student_service.authenticate_student(user_auth)
+    return student_service.authenticate_student(user_auth, response)
 
 
 @router.get("/student/me", response_model=StudentMeOut)
@@ -37,3 +37,4 @@ def get_current_student(db: Session = Depends(get_db), user = Depends(require_ro
     student_repo = RepositoryFactory(db).get_student_repository()
     student_service = ServiceFactory.get_student_service(student_repo)
     return student_service.get_current_student(user["user_id"])
+

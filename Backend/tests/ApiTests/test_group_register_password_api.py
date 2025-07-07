@@ -14,9 +14,9 @@ def test_get_group_register_password(client, basic_seed, db_session):
         "group_name": "Test Group",
         "expires_at": "2030-12-31T23:59:59Z"   # ISO 8601 + strefa
     }
-    headers = {"Authorization": f"Bearer {token}"}
+    client.cookies.set("access_token", token)
 
-    response_add_group = client.post("/api/user/superior-group/register-group", json=payload, headers=headers)
+    response_add_group = client.post("/api/user/superior-group/register-group", json=payload)
     
 
     assert response_add_group.status_code == 200
@@ -34,9 +34,9 @@ def test_get_group_register_password(client, basic_seed, db_session):
         "group_name": "Test Group",
         "expires_at": "2030-12-31T23:59:59Z"   # ISO 8601 + strefa
     }
-    headers = {"Authorization": f"Bearer {token}"}
+    client.cookies.set("access_token", token)
 
-    response_add_group = client.post("/api/user/superior-group/register-group", json=payload, headers=headers)
+    response_add_group = client.post("/api/user/superior-group/register-group", json=payload)
 
     assert response_add_group.status_code == 403
 
@@ -51,9 +51,9 @@ def test_get_group_register_password(client, basic_seed, db_session):
         "group_name": "Test Group",
         "expires_at": "2030-12-31T23:59:59Z"   # ISO 8601 + strefa
     }
-    headers = {"Authorization": f"Bearer {token}"}
+    client.cookies.set("access_token", token)
 
-    response_add_group = client.post("/api/user/superior-group/register-group", json=payload, headers=headers)
+    response_add_group = client.post("/api/user/superior-group/register-group", json=payload)
 
     assert response_add_group.status_code == 403
 

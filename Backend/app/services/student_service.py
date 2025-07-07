@@ -1,6 +1,7 @@
 from app.schemas.student import StudentAuthIn, StudentAuthOut, StudentOut, StudentMeOut
 from app.repositories.student_repository import StudentRepository
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
+from fastapi.responses import JSONResponse
 from passlib.hash import bcrypt
 from jose import jwt,JWTError
 from datetime import datetime, timedelta
@@ -14,21 +15,29 @@ class StudentService:
     def __init__(self, student_repo: StudentRepository ):
         self.student_repo = student_repo
 
-    def authenticate_student(self, student_auth: StudentAuthIn ) -> StudentAuthOut:
+    def authenticate_student(self, student_auth: StudentAuthIn, response: Response ) -> StudentAuthOut:
         student = self.student_repo.get_by_email(student_auth.email)
+        
         if not student or not bcrypt.verify(student_auth.password, student.user.hashed_password):
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid email or password"
-            )
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
         if not student.user.verified:
             raise HTTPException(status_code=403, detail="User not verified")
         
         student_access_token = jwt.encode({"sub": str(student.user.id), "role": RoleEnum.STUDENT.value, "exp":datetime.now() + timedelta(hours=1) }, SECRET_KEY, algorithm="HS256")
+        expires = datetime.now() + timedelta(hours=1)
 
+        response.set_cookie(
+            key="access_token",
+            value=student_access_token,
+            httponly=True,
+            secure=False,              # ⚠️ tylko przez HTTPS – wyłącz na localhost jeśli trzeba
+            samesite="Strict",        # lub "Lax"
+            max_age=60 * 60,          # 1h
+            expires=expires.timestamp(),
+            path="/"
+        )        
         return StudentAuthOut(
-            access_token = student_access_token, 
-            token_type= 'bearer',
             student = StudentOut(
                 student_id = student.id,
                 user_id = student.user_id,

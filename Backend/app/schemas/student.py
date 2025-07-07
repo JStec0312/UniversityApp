@@ -24,8 +24,6 @@ class StudentAuthIn(BaseModel):
     password: str
 
 class StudentAuthOut(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
     student: StudentOut
 
 

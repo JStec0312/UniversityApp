@@ -17,7 +17,7 @@ class UserService:
         self.user_repository = user_repository
 
     def create_user(self, user_data: UserCreate) -> User:
-        if self.user_repository.get_by_email(user_data.email):
+        if self.user_repository.get_by_email(user_data.email) is not None:
             raise HTTPException(status_code=400, detail="Email already exists")
 
         hashed_password = bcrypt.hash(user_data.password)
@@ -35,7 +35,8 @@ class UserService:
             send_verification_email(
                 to_email=new_user.email,
                 to_user=new_user.display_name,
-                verification_token=token
+                verification_token=token,
+                university_id=new_user.university_id
             )
             
             return new_user

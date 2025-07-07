@@ -32,21 +32,24 @@ def test_authenticate_student(client, student_seed, db_session):
 
 def test_student_me(client, student_seed, db_session):
     seed = student_seed()
-    from app.models.user import User
+
     response_login = client.post("/api/user/student/auth", json={
-        "email": "test@gmail.com",  # Correct email
-        "password": "testpassword",  # Correct password
+        "email": "test@gmail.com",
+        "password": "testpassword",
     })
+
     assert response_login.status_code == 200
 
-    token = response_login.json()["access_token"]
 
-    response_me = client.get("/api/user/student/me", headers={"Authorization": f"Bearer {token}"})
+
+    response_me = client.get("/api/user/student/me")
     assert response_me.status_code == 200
+
     data = response_me.json()
     assert data["role"] == "student"
     assert data["email"] == "test@gmail.com"
     assert data["display_name"] == "Test User"
     assert data["faculty_id"] == 1
     assert data["major_id"] == 1
-    assert data["university_id"] == 1  
+    assert data["university_id"] == 1
+

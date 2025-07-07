@@ -39,9 +39,9 @@ def test_admin_me(client, seed_admin):
         })
     assert login_response.status_code == 200
     token = login_response.json().get("access_token")
-    headers = {"Authorization": f"Bearer {token}"}
+    client.cookies.set("access_token", token)
     
-    response_me = client.get("/api/user/admin/me", headers=headers)
+    response_me = client.get("/api/user/admin/me")
     assert response_me.status_code == 200
     response_data = response_me.json()
     assert response_data["email"] == "test@gmail.com"
@@ -64,10 +64,10 @@ def test_admin_me_unauthorized(client, basic_seed):
     })
     assert response_auth.status_code == 200
     token = response_auth.json().get("access_token")
-    headers = {"Authorization": f"Bearer {token}"}
+    client.cookies.set("access_token", token)
 
     # Attempt to access admin me endpoint as student
-    response_me = client.get("/api/user/admin/me", headers=headers)
+    response_me = client.get("/api/user/admin/me")
     assert response_me.status_code == 403  # Forbidden, as student cannot access admin endpoint
     
  

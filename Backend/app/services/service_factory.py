@@ -62,3 +62,19 @@ class ServiceFactory:
     def get_group_register_password_service(group_register_password_repo):
         from app.services.group_register_password_service import GroupRegisterPasswordService
         return GroupRegisterPasswordService(group_register_password_repo)
+    
+    @staticmethod
+    def get_university_service(university_repo):
+        from app.services.university_service import UniversityService
+        return UniversityService(university_repo)
+    
+    @staticmethod
+    def get_faculty_service(faculty_repo):
+        from app.services.faculty_service import FacultyService
+        return FacultyService(faculty_repo)
+    
+    @staticmethod
+    def get_major_service(major_repo):
+        from app.services.major_service import MajorService
+        return MajorService(major_repo)
+    
