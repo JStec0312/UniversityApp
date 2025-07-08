@@ -8,10 +8,11 @@ class GroupRegisterPassword(BaseModel):
 
     id = Column(Integer, primary_key=True)
     token = Column(String(255), unique=True, nullable=False)
-    group_name = Column(String(255), nullable=False)
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
     given_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     
 
     # Relationships
     given_by_user = relationship("User", back_populates="group_register_passwords")
+    group = relationship("Group", back_populates="group_register_passwords")

@@ -78,3 +78,7 @@ class ServiceFactory:
         from app.services.major_service import MajorService
         return MajorService(major_repo)
     
+    @staticmethod
+    def get_group_service(group_repo):
+        from app.services.group_service import GroupService
+        return GroupService(group_repo)

@@ -32,11 +32,10 @@ class StudentService:
             value=student_access_token,
             httponly=True,
             secure=False,              # ⚠️ tylko przez HTTPS – wyłącz na localhost jeśli trzeba
-            samesite="Strict",        # lub "Lax"
             max_age=60 * 60,          # 1h
             expires=expires.timestamp(),
             path="/"
-        )        
+        )
         return StudentAuthOut(
             student = StudentOut(
                 student_id = student.id,
@@ -65,4 +64,8 @@ class StudentService:
         )
     
 
-    
+
+    def logout(self, response: Response):
+        response = JSONResponse(content={"message": "Logged out successfully"}, status_code=200)
+        response.delete_cookie("access_token", path="/")
+        return response

@@ -1,13 +1,13 @@
-from app.repositories.base_repository import BaseRepo
+from app.repositories.base_repository import BaseRepository
 from app.models.group import Group
 
-class GroupRepository(BaseRepo[Group]):
+class GroupRepository(BaseRepository[Group]):
     def __init__(self, db):
         super().__init__(db, Group)
 
     def get_by_name(self, name: str, university_id: int) -> Group | None:
         return self.db.query(self.model).filter(
-            self.model.name == name,
+            self.model.group_name == name,
             self.model.university_id == university_id
         ).first()
 

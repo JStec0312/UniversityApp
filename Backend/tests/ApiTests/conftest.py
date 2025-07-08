@@ -123,8 +123,17 @@ def basic_seed(db_session):
             display_name="Test Non Superior Admin"
         )
 
+        #non verified user
+        user_non_verified = User(
+            email="nonverified@gmail.com",
+            hashed_password=bcrypt.hash("password"),
+            verified=False,
+            university_id=university.id,
+            display_name="Test Non Verified User"
+        )
 
-        db_session.add_all([user_student, user_admin, user_non_superior_amin])
+
+        db_session.add_all([user_student, user_admin, user_non_superior_amin, user_non_verified])
         db_session.flush()
         # Create a student
         student = Student(
@@ -282,4 +291,97 @@ def user_seed(db_session):
         group = Group(university_id=1, group_name="Test Group")
         db.add_all([university, faculty, major, group])
         db.flush()
+    return _seed
+
+
+@pytest.fixture
+def superior_group_api_seed(db_session):
+    def _seed():
+        db = db_session
+        university = University(id=1, name="Test University")
+        db.add(university)
+        db.flush()
+        
+        group = Group(group_name="Test Group", university_id=university.id)
+        db.add(group)
+        db.flush()
+        
+        superior_group = SuperiorGroup(
+            university_id=university.id,
+            group_id=group.id
+        )
+        db.add(superior_group)
+        db.commit()
+
+        # Create non superior group
+        non_superior_group = Group(
+            group_name="Non Superior Group",
+            university_id=university.id
+        )
+        db.add(non_superior_group)
+        db.commit()
+
+
+
+        user = User(
+            email="test@gmail.com",
+            hashed_password=bcrypt.hash("testpassword"),
+            verified=True,
+            university_id=university.id,
+            display_name="Test User"
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        admin = Admin(
+            user_id=user.id,
+            group_id=group.id
+        )
+        db.add(admin)
+        db.commit()
+        db.refresh(admin)
+
+        #non authorized admin
+        user_non_superior = User(
+            email="test2@gmail.com",
+            hashed_password=bcrypt.hash("testpassword"),
+            verified=True,
+            university_id=university.id,
+            display_name="Test Non Superior User"
+        )
+        db.add(user_non_superior)
+        db.commit()
+        db.refresh(user_non_superior)
+        
+        non_superior_admin = Admin(
+            user_id=user_non_superior.id,
+            group_id=non_superior_group.id
+        )
+        db.add(non_superior_admin)
+        db.commit()
+        db.refresh(non_superior_admin)
+
+        #student
+        student_user = User(
+            email="test3@gmail.com",
+            hashed_password=bcrypt.hash("testpassword"),
+            verified=True,
+            university_id=university.id,
+            display_name="Test Student User"
+        )
+        db.add(student_user)
+        db.commit()
+        db.refresh(student_user)        
+        student = Student(
+            user_id=student_user.id,
+            faculty_id=1,  # Assuming faculty_id is 1
+            major_id=1     # Assuming major_id is 1
+        )
+        db.add(student)
+        db.commit()
+        db.refresh(student)
+        
+
+        
     return _seed

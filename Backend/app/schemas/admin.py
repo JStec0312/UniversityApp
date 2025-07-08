@@ -29,6 +29,7 @@ class AdminVerificationIn(BaseModel):
         group_id: ID of the group the admin belongs to
     """
     group_id: int
+    group_password: str
 
 
 class AdminAuthIn(BaseModel):
@@ -47,25 +48,6 @@ class AdminAuthIn(BaseModel):
 
 
 class AdminAuthOut(BaseModel):
-    """
-    Schema for admin authentication response.
-    
-    This model defines the structure of the response when an admin
-    successfully authenticates, including the JWT token and admin details.
-    
-    Attributes:
-        access_token: JWT token for authenticated requests
-        token_type: Type of token (typically "bearer")
-        role: Admin role enum value
-        admin_id: ID of the admin record
-        university_id: ID of the university the admin belongs to
-        user_id: ID of the user record associated with the admin
-        email: Admin's email address
-        display_name: Admin's display name
-        group_id: ID of the group the admin belongs to
-    """
-    access_token: str
-    token_type: str = "bearer"
     admin: AdminOut
     
 

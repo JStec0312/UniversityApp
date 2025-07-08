@@ -125,3 +125,13 @@ class RepositoryFactory:
             GroupRegisterPasswordRepository: Repository for group registration password-related database operations
         """
         return GroupRegisterPasswordRepository(self.db)
+    
+    def get_group_repository(self) -> BaseRepository:
+        """
+        Create and return a GroupRepository instance.
+        
+        Returns:
+            BaseRepository: Repository for group-related database operations
+        """
+        from app.repositories.group_repository import GroupRepository
+        return GroupRepository(self.db)

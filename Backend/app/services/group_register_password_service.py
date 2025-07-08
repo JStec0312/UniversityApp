@@ -10,14 +10,14 @@ class GroupRegisterPasswordService:
         import uuid
         group_register_password = GroupRegisterPassword(
             token=str(uuid.uuid4()),
-            group_name=data.group_name,
+            group_id=data.group_id,
             given_by=given_by,
             expires_at=data.expires_at
         )
         new_password_record = self.group_register_password_repo.create(group_register_password)
         return GroupRegisterPasswordOut(
             token = new_password_record.token,
-            group_name = new_password_record.group_name,
+            group_id= new_password_record.group_id,
             expires_at = new_password_record.expires_at
         )
     

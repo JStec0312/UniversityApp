@@ -4,7 +4,7 @@ Admin API endpoints for authentication and verification of admin users.
 This module provides routes for admin authentication and verification.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.repositories.repository_factory import RepositoryFactory
@@ -35,7 +35,7 @@ def verify_admin(token: str, verification_info: AdminVerificationIn, db: Session
     return user_service.verify_admin(token, verification_info)
 
 @router.post("/admin/auth", response_model=AdminAuthOut)
-def authenticate_admin(admin_auth: AdminAuthIn, db: Session = Depends(get_db)):
+def authenticate_admin(admin_auth: AdminAuthIn, response:Response, db: Session = Depends(get_db)):
     """
     Authenticate an admin user and generate an access token.
     
@@ -48,11 +48,11 @@ def authenticate_admin(admin_auth: AdminAuthIn, db: Session = Depends(get_db)):
     """
     admin_repo = RepositoryFactory(db).get_admin_repository()
     admin_service = ServiceFactory.get_admin_service(admin_repo)
-    return admin_service.authenticate_admin(admin_auth)
+    return admin_service.authenticate_admin(admin_auth, response)
 
 
 @router.get("/admin/me", response_model=AdminMeOut)
-def get_current_student(db: Session = Depends(get_db), user = Depends(require_roles([RoleEnum.ADMIN.value]))):
+def get_current_admin(db: Session = Depends(get_db), user = Depends(require_roles([RoleEnum.ADMIN.value, RoleEnum.SUPERIOR_ADMIN.value]))):
     """
     Get the current authenticated student.
     
@@ -64,3 +64,4 @@ def get_current_student(db: Session = Depends(get_db), user = Depends(require_ro
     admin_repo = RepositoryFactory(db).get_admin_repository()
     admin_service = ServiceFactory.get_admin_service(admin_repo)
     return admin_service.get_current_admin(user["user_id"])
+

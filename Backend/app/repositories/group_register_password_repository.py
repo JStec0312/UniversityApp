@@ -10,10 +10,6 @@ class GroupRegisterPasswordRepository(BaseRepository[GroupRegisterPassword]):
             self.model.token == token
         ).first()
 
-    def get_by_group_name(self, group_name: str) -> GroupRegisterPassword | None:
-        return self.db.query(self.model).filter(
-            self.model.group_name == group_name
-        ).first()
 
     def set_expired(self, token: str) -> None:
         group_register_password = self.get_by_token(token)

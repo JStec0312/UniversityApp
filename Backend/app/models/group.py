@@ -15,4 +15,5 @@ class Group(BaseModel):
     # Use string reference to avoid circular import
     admins = relationship("Admin", back_populates="group")  # Administrators of this group
     superior_groups = relationship("SuperiorGroup", back_populates="group")  # Hierarchical relationships
+    group_register_passwords = relationship("GroupRegisterPassword", back_populates="group")  # Passwords for group registration
     

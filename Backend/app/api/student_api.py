@@ -9,7 +9,7 @@ from app.schemas.student import StudentVerificationIn, StudentAuthOut, StudentAu
 from app.schemas.user import UserOut
 router = APIRouter()
 
-@router.post("/verify/student/{token}", response_model=UserOut)
+@router.post("/student/verify/{token}", response_model=UserOut)
 def verify_user(token: str, verification_info: StudentVerificationIn,  db: Session = Depends(get_db)):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
@@ -38,3 +38,12 @@ def get_current_student(db: Session = Depends(get_db), user = Depends(require_ro
     student_service = ServiceFactory.get_student_service(student_repo)
     return student_service.get_current_student(user["user_id"])
 
+
+@router.post("/student/logout")
+def logout (response: Response, db: Session = Depends(get_db)):
+    """
+    Logout the current user by clearing the authentication cookie.
+    """
+    student_repo = RepositoryFactory(db).get_student_repository()
+    student_service = ServiceFactory.get_student_service(student_repo)
+    return student_service.logout(response)

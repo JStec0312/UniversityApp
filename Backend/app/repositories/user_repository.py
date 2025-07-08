@@ -43,17 +43,33 @@ class UserRepository(BaseRepository[User]):
         raise ValueError("User does not exist")
     
 
-    def create_admin(self, user_id: int,  group_id: int) -> User:
+    def create_admin(self, user_id: int,  group_id: int, group_password:str ) -> User: #@TODO BŁĄD TUTAJ
         existing_user = self.get_by_id(user_id)
-        if  existing_user:
-            admin_repo = AdminRepository(self.db)
-            admin = Admin(
-                user_id=user_id,
-                group_id=group_id,
-            )
-            new_admin = admin_repo.create(admin)
-            return new_admin
+        if not existing_user:
+            raise ValueError("User does not exist")
+        # Validating group password 
+        from app.repositories.group_register_password_repository import GroupRegisterPasswordRepository
+        from datetime import datetime
+        group_password_repo = GroupRegisterPasswordRepository(self.db)
+        group_password_record = group_password_repo.get_by_token(group_password)
+        if not group_password_record:
+            raise ValueError("Group password does not exist")
+        if group_password_record.expires_at < datetime.now():
+            raise ValueError("Group password has expired")
+        if group_password_record.group_id != group_id:
+            raise ValueError("Group password does not match the group ID")
+
+
+        admin_repo = AdminRepository(self.db)
+        admin = Admin(
+            user_id=user_id,
+            group_id=group_id,
+        )
+        new_admin = admin_repo.create(admin)
+        return new_admin
         
-    
-        
-    
+    def get_university_id_by_user_id(self, user_id: int) -> int | None:
+        user = self.get_by_id(user_id)
+        if user:
+            return user.university_id
+        return None
