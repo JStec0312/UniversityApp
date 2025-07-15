@@ -1,32 +1,36 @@
 'use client';
 import { useState } from 'react';
-import {  authStudent } from '@/api/authStudent';
+import { useRouter } from 'next/navigation';
+import {login} from '@/api/authApi';
 
 export default function Home() {
+  const navigation = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const handleSubmit = async (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    try {
-      const data = await authStudent(email, password);
-      const token = data.access_token;
-
-      setSuccess('Zalogowano!');
-      window.location.href = "/dashboard";
-    } catch (err) {
-      if (err.response) {
-        setError(err.response.data.detail || 'Błąd logowania');
-      } else {
-        setError('Błąd połączenia z serwerem');
+    try{
+      const response = await login(email, password);
+      if (response.student) {
+        setSuccess('Login successful!');
+        setError('');
+        navigation.push('/dashboard'); 
       }
+      else {
+        setError('Login failed. Please check your credentials.');
+        setSuccess('');
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError('An error occurred while logging in. Please try again.');
+      setSuccess('');
     }
-  };
+  }
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -36,7 +40,7 @@ export default function Home() {
 
         <form
           className="mt-8 flex flex-col items-center gap-8"
-          onSubmit={handleSubmit}
+          onSubmit = {handleLoginSubmit}
         >
           <label className="block mb-2 w-64">
             <span className="text-white">Email:</span>
