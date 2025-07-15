@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from app.models.group import Group
-from app.schemas.group import GroupCreateIn, GroupCreateOut
+from app.schemas.group import GroupCreateIn, GroupCreateOut, GroupByUniOut
 from app.repositories.repository_factory import RepositoryFactory
 from app.repositories.group_repository import GroupRepository
 class GroupService:
@@ -34,9 +34,17 @@ class GroupService:
             university_id=group.university_id
         )
     
+    def get_groups_by_university_id(self, university_id: int):
+        groups = self.group_repo.get_by_university_id(university_id)
+        if not groups:
+            raise HTTPException(status_code=404, detail="No groups found for this university")
         
-
-
-
+        return [
+            GroupByUniOut(
+                group_id=group.id,
+                group_name=group.group_name,
+                university_id=group.university_id
+            )
+            for group in groups]
         
         

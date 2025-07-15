@@ -8,4 +8,9 @@ class GroupCreateOut(BaseModel):
     group_id: int
     group_name: str
     university_id: int
-    
+
+class GroupByUniOut(BaseModel):
+    group_id: int
+    group_name: str
+    university_id: int
+

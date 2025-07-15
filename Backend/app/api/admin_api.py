@@ -17,7 +17,7 @@ from app.utils.role_enum import RoleEnum
 # Create router instance for admin endpoints
 router = APIRouter()
 
-@router.post("/verify/admin/{token}", response_model=UserOut)
+@router.post("/admin/verify/{token}", response_model=UserOut)
 def verify_admin(token: str, verification_info: AdminVerificationIn, db: Session = Depends(get_db)):
     """
     Verify an admin user account using the provided verification token.

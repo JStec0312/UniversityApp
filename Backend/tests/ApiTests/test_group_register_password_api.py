@@ -37,11 +37,10 @@ def test_verify_admin_using_group_register_password_api(client, db_session, basi
     }
     verification_token = jwt.encode(data, SECRET_KEY, algorithm="HS256")
 
-    response_verify_admin = client.post(f"/api/user/verify/admin/{verification_token}", json={
+    response_verify_admin = client.post(f"/api/user/admin/verify/{verification_token}", json={
         "group_id":2,
         "group_password": group_register_password,
         })
-    print("🔴 Odpowiedź serwera:", response_verify_admin.text)  # 👈 TU!
 
     
     # Debug the response if it's not 200

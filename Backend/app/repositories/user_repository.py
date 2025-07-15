@@ -66,6 +66,7 @@ class UserRepository(BaseRepository[User]):
             group_id=group_id,
         )
         new_admin = admin_repo.create(admin)
+        #group_password_repo.delete_by_id(group_password_record.id) @TODO Uncomment this line to delete the group password after creating admin
         return new_admin
         
     def get_university_id_by_user_id(self, user_id: int) -> int | None:
