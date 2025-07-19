@@ -14,7 +14,6 @@ class AdminOut(BaseModel):
     admin_id: int
     university_id: int
     user_id: int
-    email: EmailStr
     display_name: str
     group_id: int
 
@@ -48,6 +47,7 @@ class AdminAuthIn(BaseModel):
 
 
 class AdminAuthOut(BaseModel):
+
     admin: AdminOut
     
 

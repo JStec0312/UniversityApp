@@ -9,7 +9,6 @@ class UserCreate(BaseModel):
 
 class UserOut(BaseModel):
     id: int
-    email: EmailStr
     display_name: str
 
     class Config:

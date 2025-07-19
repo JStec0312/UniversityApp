@@ -2,7 +2,10 @@
 import {useState} from 'react';
 import { useRouter } from 'next/navigation';
 import { adminLogin } from '@/api/adminAuthApi';
+import { useUser } from '@/context/UserContext';
+
 export default function AdminLoginPage(){
+    const {setUser} = useUser();
     const [form, setForm] = useState({
         email: '',
         password: ''
@@ -22,6 +25,9 @@ export default function AdminLoginPage(){
         try{
             const response = await adminLogin(form.email, form.password);
             setMessage('Zalogowano pomyślnie! Przekierowywanie do panelu administratora...');
+            const me = {displayName: response.admin.display_name, universityId: response.admin.university_id, userId: response.admin.user_id, groupId: response.admin.group_id, adminId: response.admin.admin_id, role: 'admin'}
+            console.log(me);
+            setUser(me); // Set user in context
             setTimeout(() => {
                 router.push('/admin-dashboard'); // Redirect to admin dashboard
             }, 2000);

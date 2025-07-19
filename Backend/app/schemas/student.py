@@ -14,7 +14,6 @@ class StudentOut(BaseModel):
     student_id: int
     university_id: int
     user_id: int
-    email: EmailStr
     display_name: str
     faculty_id: Optional[int] = None
     major_id: Optional[int] = None

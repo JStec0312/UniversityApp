@@ -41,7 +41,6 @@ class StudentService:
                 student_id = student.id,
                 user_id = student.user_id,
                 university_id= student.user.university_id,
-                email = student.user.email,
                 faculty_id= student.faculty_id,
                 major_id= student.major_id,
                 display_name= student.user.display_name

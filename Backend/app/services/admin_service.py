@@ -73,7 +73,6 @@ class AdminService:
                 admin_id=admin.id,
                 user_id=admin.user_id,
                 university_id=admin.user.university_id,
-                email=admin.user.email,
                 display_name=admin.user.display_name,
                 group_id=admin.group_id
             )

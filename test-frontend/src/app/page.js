@@ -2,19 +2,24 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {login} from '@/api/authApi';
+import { useUser } from '@/context/UserContext';
 
 export default function Home() {
+  const {setUser} = useUser();
   const navigation = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try{
       const response = await login(email, password);
       if (response.student) {
+        const me = {displayName: response.student.display_name, universityId: response.student.university_id, userId: response.student.user_id, studentId : response.student.student_id, role: 'student'};
+        setUser(me);
         setSuccess('Login successful!');
         setError('');
         navigation.push('/dashboard'); 
