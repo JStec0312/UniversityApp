@@ -1,5 +1,5 @@
 import "./globals.css";
-import {UserProvider} from "@/context/UserContext";
+import {UserProvider} from "./UserContext";
 
 export default function RootLayout({ children }) {
 

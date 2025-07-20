@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { logout } from "@/api/authApi";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/app/UserContext";
 
 export default function DashboardPage() {
   const { user } = useUser();

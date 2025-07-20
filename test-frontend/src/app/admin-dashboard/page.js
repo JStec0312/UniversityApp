@@ -1,5 +1,5 @@
 "use client";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/app/UserContext";
 
 export default function AdminDashboardPage() {
   const { user } = useUser();

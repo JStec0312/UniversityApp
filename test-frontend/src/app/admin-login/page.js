@@ -2,7 +2,7 @@
 import {useState} from 'react';
 import { useRouter } from 'next/navigation';
 import { adminLogin } from '@/api/adminAuthApi';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '@/app/UserContext';
 
 export default function AdminLoginPage(){
     const {setUser} = useUser();

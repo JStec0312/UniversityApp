@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from app.models.user import User
 from app.models.student import Student
 from app.schemas.user import UserCreate
@@ -142,3 +142,11 @@ class UserService:
         except Exception as e:
             print("Error sending verification email:", str(e))
             raise HTTPException(status_code=500, detail=str(e))
+        
+
+
+    def get_user_email(self, user_id:int) -> str:
+        user = self.user_repository.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return user.email  

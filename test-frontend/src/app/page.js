@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {login} from '@/api/authApi';
-import { useUser } from '@/context/UserContext';
+import { useUser } from './UserContext';
 
 export default function Home() {
   const {setUser} = useUser();
