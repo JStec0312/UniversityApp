@@ -14,8 +14,8 @@ class Event(BaseModel):
     end_date = Column(DateTime(timezone=True), nullable=False)
     location = Column(String(255), nullable=False)
     image_url = Column(String(512))
-    admin_id = Column(Integer, ForeignKey("admins.id"), nullable=False)
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)  
     
     # Relationships
-    admin = relationship("Admin", back_populates="events")
+    group = relationship("Group", back_populates="events")
     rsvps = relationship("EventRSVP", back_populates="event")

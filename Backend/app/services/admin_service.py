@@ -13,6 +13,9 @@ from fastapi import HTTPException, Response
 from passlib.hash import bcrypt
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
+from app.schemas.event import AddEventIn
+from app.models.event import Event
+from zoneinfo import ZoneInfo
 
 
 import os
@@ -90,4 +93,38 @@ class AdminService:
             university_id=admin.user.university_id,
             group_id=admin.group_id
         )
-    
+
+
+    def create_event(self, event_data: AddEventIn, user_id: int):
+        event_repo = self.admin_repo.get_event_repository()
+        group_id = self.admin_repo.get_group_id_by_user_id(user_id)
+
+        if not group_id:
+            raise HTTPException(status_code=404, detail="Group not found for user")
+
+        start = event_data.start_date
+        end = event_data.end_date
+        now = datetime.now(ZoneInfo("Europe/Warsaw"))
+
+        if start >= end:
+            raise HTTPException(status_code=400, detail="Start date must be before end date")
+        if start < now:
+            raise HTTPException(status_code=400, detail="Start date cannot be in the past")
+
+        new_event = Event(
+            title=event_data.title,
+            description=event_data.description,
+            start_date=start,
+            end_date=end,
+            location=event_data.location,
+            image_url=event_data.image_url,
+            group_id=group_id
+        )
+
+        event_repo.create(new_event)
+
+        return {
+            "status": "success",
+            "message": "Event created successfully",
+            "event_id": new_event.id
+        }

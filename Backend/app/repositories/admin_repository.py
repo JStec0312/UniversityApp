@@ -71,3 +71,29 @@ class AdminRepository(BaseRepository[Admin]):
             .filter(User.email == email)
             .first()
         )
+    
+    def get_event_repository(self):
+        """
+        Get the event repository for creating events.
+        
+        This method returns the repository for managing events, which is used
+        when an admin creates a new event.
+        
+        Returns:
+            EventRepository: The repository for managing events
+        """
+        from app.repositories.event_repository import EventRepository
+        return EventRepository(self.db)
+    
+    def get_group_id_by_user_id(self, user_id: int) -> int | None:
+        """
+        Get the group ID associated with a specific user ID.
+        
+        Args:
+            user_id: The ID of the user to find the group for
+            
+        Returns:
+            int: The group ID or None if not found
+        """
+        admin = self.get_by_user_id(user_id)
+        return admin.group_id if admin else None

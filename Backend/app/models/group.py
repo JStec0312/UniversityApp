@@ -14,6 +14,7 @@ class Group(BaseModel):
     university = relationship("University", back_populates="groups")  # Link to the university
     # Use string reference to avoid circular import
     admins = relationship("Admin", back_populates="group")  # Administrators of this group
+    events = relationship("Event", back_populates="group")  # Events associated with this group
     superior_groups = relationship("SuperiorGroup", back_populates="group")  # Hierarchical relationships
     group_register_passwords = relationship("GroupRegisterPassword", back_populates="group")  # Passwords for group registration
     

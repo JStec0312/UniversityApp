@@ -13,6 +13,7 @@ from app.schemas.admin import AdminVerificationIn, AdminAuthIn, AdminAuthOut, Ad
 from app.schemas.user import UserOut
 from app.utils.require_roles import require_roles
 from app.utils.role_enum import RoleEnum
+from app.schemas.event import AddEventIn
 
 # Create router instance for admin endpoints
 router = APIRouter()
@@ -65,3 +66,20 @@ def get_current_admin(db: Session = Depends(get_db), user = Depends(require_role
     admin_service = ServiceFactory.get_admin_service(admin_repo)
     return admin_service.get_current_admin(user["user_id"])
 
+@router.post("/admin/event")
+def create_event(event_data: AddEventIn, db:Session = Depends(get_db), user = Depends(require_roles([RoleEnum.ADMIN.value, RoleEnum.SUPERIOR_ADMIN.value]))):
+    """
+    Create a new event as an admin.
+    
+    This endpoint allows an admin to create a new event.
+    
+    Args:
+        event_data: The data for the new event.
+        db: Database session dependency.
+        
+    Returns:
+        EventOut: Status code indicating success or failure.
+    """
+    admin_repo = RepositoryFactory(db).get_admin_repository()
+    admin_service = ServiceFactory.get_admin_service(admin_repo)
+    return admin_service.create_event(event_data, user["user_id"])
