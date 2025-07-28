@@ -135,3 +135,4 @@ class RepositoryFactory:
         """
         from app.repositories.group_repository import GroupRepository
         return GroupRepository(self.db)
+    

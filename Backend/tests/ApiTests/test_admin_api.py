@@ -81,7 +81,7 @@ def test_create_event(client, seed_admin, db_session):
     response_event = client.post("/api/user/admin/event", json={
         "title": "Test Event",
         "description": "This is a test event",
-        "start_date": "2025-07-24T14:30",
+        "start_date": "2027-08-24T14:30",
         "end_date": "2029-10-01T12:00",
         "location": "Test Location",
         "image_url": "http://example.com/image.jpg",
@@ -94,6 +94,39 @@ def test_create_event(client, seed_admin, db_session):
     assert event.title == "Test Event"
     assert event.description == "This is a test event"
     import datetime
-    assert event.start_date == datetime.datetime(2025, 7, 24, 14, 30)
+    assert event.start_date == datetime.datetime(2027, 8, 24, 14, 30)
     assert event.end_date == datetime.datetime(2029, 10, 1, 12, 0)
     assert event.location == "Test Location"
+    assert event.university_id == 1  # Assuming university_id is 1 in seed_admin
+
+
+def test_create_event_unauthorized(client, basic_seed):
+    basic_seed()
+    # Attempt to create an event without authentication
+    response_event = client.post("/api/user/admin/event", json={
+        "title": "Test Event",
+        "description": "This is a test event",
+        "start_date": "2025-07-24T14:30",
+        "end_date": "2029-10-01T12:00",
+        "location": "Test Location",
+        "image_url": "http://example.com/image.jpg",
+    })
+    assert response_event.status_code == 401
+    
+    #login as student
+    response_auth = client.post("/api/user/student/auth", json={
+        "email": "user@gmail.com",
+        "password": "password"
+    })
+    assert response_auth.status_code == 200
+    # Attempt to create an event as student
+    response_event = client.post("/api/user/admin/event", json={
+        "title": "Test Event",
+        "description": "This is a test event",
+        "start_date": "2025-07-24T14:30",
+        "end_date": "2029-10-01T12:00",
+        "location": "Test Location",
+        "image_url": "http://example.com/image.jpg",
+    })
+    assert response_event.status_code == 403  # Forbidden, as student cannot access admin endpoint
+    

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import user_api, student_api, admin_api, superior_group_api, university_api, faculty_api, major_api, group_api
+from app.api import user_api, student_api, admin_api, superior_group_api, university_api, faculty_api, major_api, group_api, event_api
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.db import Base, engine
 
@@ -26,3 +26,4 @@ app.include_router(university_api.router, prefix="/api/university", tags=["unive
 app.include_router(faculty_api.router, prefix="/api/university", tags=["faculties"])
 app.include_router(major_api.router, prefix="/api/university", tags=["majors"])
 app.include_router(group_api.router, prefix="/api/group", tags=["groups"])
+app.include_router(event_api.router, prefix="/api/event", tags=["events"])

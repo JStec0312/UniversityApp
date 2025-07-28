@@ -15,7 +15,9 @@ class Event(BaseModel):
     location = Column(String(255), nullable=False)
     image_url = Column(String(512))
     group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)  
+    university_id = Column(Integer, ForeignKey("universities.id"), nullable=False)
     
     # Relationships
     group = relationship("Group", back_populates="events")
     rsvps = relationship("EventRSVP", back_populates="event")
+    university = relationship("University", back_populates="events")

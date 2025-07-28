@@ -23,10 +23,8 @@ class StudentService:
         
         if not student.user.verified:
             raise HTTPException(status_code=403, detail="User not verified")
-        
-        student_access_token = jwt.encode({"sub": str(student.user.id), "role": RoleEnum.STUDENT.value, "exp":datetime.now() + timedelta(hours=1) }, SECRET_KEY, algorithm="HS256")
-        expires = datetime.now() + timedelta(hours=1)
-
+        expires = datetime.now() + timedelta(hours=100)
+        student_access_token = jwt.encode({"sub": str(student.user.id), "role": RoleEnum.STUDENT.value, "exp": expires, "university_id": student.user.university_id }, SECRET_KEY, algorithm="HS256")
         response.set_cookie(
             key="access_token",
             value=student_access_token,
@@ -34,7 +32,8 @@ class StudentService:
             secure=False,              # ⚠️ tylko przez HTTPS – wyłącz na localhost jeśli trzeba
             max_age=60 * 60,          # 1h
             expires=expires.timestamp(),
-            path="/"
+            path="/",
+            samesite="lax"
         )
         return StudentAuthOut(
             student = StudentOut(

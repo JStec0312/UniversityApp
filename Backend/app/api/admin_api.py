@@ -82,4 +82,4 @@ def create_event(event_data: AddEventIn, db:Session = Depends(get_db), user = De
     """
     admin_repo = RepositoryFactory(db).get_admin_repository()
     admin_service = ServiceFactory.get_admin_service(admin_repo)
-    return admin_service.create_event(event_data, user["user_id"])
+    return admin_service.create_event(event_data, user["user_id"], user["university_id"])

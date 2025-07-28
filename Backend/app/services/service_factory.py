@@ -82,3 +82,8 @@ class ServiceFactory:
     def get_group_service(group_repo):
         from app.services.group_service import GroupService
         return GroupService(group_repo)
+    
+    @staticmethod
+    def get_event_service(event_repo):
+        from app.services.event_service import EventService
+        return EventService(event_repo)

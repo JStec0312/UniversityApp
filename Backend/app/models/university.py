@@ -14,3 +14,4 @@ class University(BaseModel):
     users = relationship("User", back_populates="university")
     groups = relationship("Group", back_populates="university")
     superior_groups = relationship("SuperiorGroup", back_populates="university")  # ✅ dodaj to
+    events = relationship("Event", back_populates="university")

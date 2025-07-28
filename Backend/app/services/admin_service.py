@@ -58,8 +58,8 @@ class AdminService:
         role = RoleEnum.SUPERIOR_ADMIN if len(admin.group.superior_groups) > 0 else RoleEnum.ADMIN
         
         # Generate JWT token
-        admin_access_token = jwt.encode({"sub": str(admin.user.id), "role":role.value, "exp": datetime.now() + timedelta(hours=1)}, SECRET_KEY, algorithm="HS256")
-        
+        admin_access_token = jwt.encode({"sub": str(admin.user.id), "role":role.value, "exp": datetime.now() + timedelta(hours=1), "university_id": admin.user.university_id}, SECRET_KEY, algorithm="HS256")
+
         response.set_cookie(
             key="access_token",
             value=admin_access_token,
@@ -95,9 +95,10 @@ class AdminService:
         )
 
 
-    def create_event(self, event_data: AddEventIn, user_id: int):
+    def create_event(self, event_data: AddEventIn, user_id: int, university_id: int):
         event_repo = self.admin_repo.get_event_repository()
         group_id = self.admin_repo.get_group_id_by_user_id(user_id)
+        
 
         if not group_id:
             raise HTTPException(status_code=404, detail="Group not found for user")
@@ -118,7 +119,8 @@ class AdminService:
             end_date=end,
             location=event_data.location,
             image_url=event_data.image_url,
-            group_id=group_id
+            group_id=group_id, 
+            university_id=university_id
         )
 
         event_repo.create(new_event)

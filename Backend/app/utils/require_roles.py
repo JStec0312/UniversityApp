@@ -17,12 +17,13 @@ def require_roles(allowed_roles: list[str]):
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             role: str = payload.get("role")
+            university_id: int = payload.get("university_id")
             if role not in allowed_roles:
                 raise HTTPException(
                     status_code=403,
                     detail="Operation not permitted for this role"
                 )
-            return {"user_id": int(payload.get("sub")), "role": role}
+            return {"user_id": int(payload.get("sub")), "role": role, "university_id": university_id}
         except JWTError:
             raise HTTPException(
                 status_code=401,

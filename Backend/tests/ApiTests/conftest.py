@@ -4,9 +4,9 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
-from app.models import User, University, Faculty, Major, Group, Admin, SuperiorGroup, Student
-from app.core.db import Base, get_db
+from app.models import User, University, Faculty, Major, Group, Admin, SuperiorGroup, Student, Event
 from app.main import app
+from app.core.db import Base, get_db
 from passlib.hash import bcrypt
 
 
@@ -54,6 +54,17 @@ def db_session(engine):
 # 3) Podmieniamy zależność FastAPI na naszą sesję
 @pytest.fixture(scope="function")
 def client(db_session):
+    # Configure logging for tests
+    import logging
+    import sys
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[logging.StreamHandler(sys.stdout)]
+    )
+    app_logger = logging.getLogger("app")
+    app_logger.setLevel(logging.DEBUG)
+    
     app.dependency_overrides[get_db] = lambda: db_session
     with TestClient(app) as c:
         yield c
@@ -385,3 +396,87 @@ def superior_group_api_seed(db_session):
 
         
     return _seed
+
+
+@pytest.fixture
+def event_api_seed(db_session):
+    def _seed():
+        #two universities
+        university1 = University(id=1, name="Test University 1")
+        university2 = University(id=2, name="Test University 2")
+        db_session.add_all([university1, university2])
+        db_session.flush()
+        # Create faculties
+        faculty1 = Faculty(id=1, name="Test Faculty 1", university_id=1)
+        faculty2 = Faculty(id=2, name="Test Faculty 2", university_id=2)
+        db_session.add_all([faculty1, faculty2])
+        db_session.flush()
+        # Create majors
+        major1 = Major(id=1, name="Test Major 1", faculty_id=1)
+        major2 = Major(id=2, name="Test Major 2", faculty_id=2)
+        db_session.add_all([major1, major2])
+        db_session.flush()
+
+        # Create groups
+        group1 = Group(university_id=1, group_name="Test Group 1")
+        group2 = Group(university_id=2, group_name="Test Group 2")
+        db_session.add_all([group1, group2])
+        db_session.flush()
+        #Create events
+        from datetime import date
+        event1 = Event(
+            title="Upcoming Event 1",
+            description="Description for upcoming event 1",
+            location = "Location for event 1",
+
+            start_date=date(2028, 10, 15),
+            end_date=date(2028, 10, 16),
+            group_id=group1.id,
+            university_id=university1.id
+        )
+        event2 = Event(
+            title="Upcoming Event 2",
+            description="Description for upcoming event 2",
+            location = "Location for event 2",
+            start_date=date(2028, 11, 20),
+            end_date=date(2028, 11, 21),
+            group_id=group2.id,
+            university_id=university2.id
+        )
+        db_session.add_all([event1, event2])
+        db_session.flush()
+        #user from university 1
+        user1 = User(
+            email="test@gmail.com",    
+            hashed_password=bcrypt.hash("testpassword"),
+            verified=True,
+            display_name="Test User 1",
+            university_id=1
+        )
+        #user from university 2
+        user2 = User(
+            email=" test2@gmail.com",
+            hashed_password=bcrypt.hash("testpassword"),
+            verified=True,
+            display_name="Test User 2",
+            university_id=2
+        )
+        db_session.add_all([user1, user2])
+        db_session.flush()
+        #Create students
+        student1 = Student(
+            user_id=user1.id,
+            faculty_id=faculty1.id,
+            major_id=major1.id
+        )
+        student2 = Student(
+            user_id=user2.id,
+            faculty_id=faculty2.id,
+            major_id=major2.id
+        )
+        db_session.add_all([student1, student2])
+        db_session.flush()
+        
+    return _seed
+        
+        
