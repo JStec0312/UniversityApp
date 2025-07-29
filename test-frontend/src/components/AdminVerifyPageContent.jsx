@@ -19,7 +19,6 @@ export default function AdminVerifyPageContent({ groups,  token}){
         e.preventDefault();
         try{
             const response = await verifyAdminGroup(token, formData.group_id, formData.group_password);
-            console.log(response);
         } catch(error){
             console.error("Error:", error);
         }

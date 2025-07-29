@@ -80,8 +80,7 @@ def test_get_email(client, basic_seed):
         "password": "password"
     })
     assert response_login.status_code == 200
-    token = response_login.json().get("access_token")
-    response = client.post("/api/user/getEmail")
+    response = client.get("/api/user/getEmail")
     assert response.status_code == 200
     assert response.json() == "user@gmail.com"
 

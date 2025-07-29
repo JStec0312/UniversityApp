@@ -12,7 +12,7 @@ class EventRepository(BaseRepository[Event]):
 
     def get_upcoming_events(self, university_id: int, limit: int = 20) -> list[Event]:
         today = date.today()
-        return self.db.query(self.model).filter(
+        return self.db.query(self.model).join(self.model.group).filter(
             self.model.start_date >= today,
             self.model.university_id == university_id
         ).order_by(self.model.start_date).limit(limit).all()

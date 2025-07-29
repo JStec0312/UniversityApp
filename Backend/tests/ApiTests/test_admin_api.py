@@ -1,7 +1,7 @@
 """
 Test module for admin API endpoints.
 
-This module contains tests for admin authentication and verification endpoints.
+This module contains tests for admin authentication and veriication endpoints.
 Each test uses its own isolated database.
 """
 

@@ -6,7 +6,9 @@ def test_verify_admin_using_group_register_password_api(client, db_session, basi
         "email": "admin@gmail.com",
         "password": "password"
     }
-    expiration_strig = (datetime.now() + timedelta(days=7)).isoformat()
+    from app.utils.timebox import Clock
+    expiration_time = Clock.now() + timedelta(days=1)
+
     response_login = client.post("/api/user/admin/auth", json=login_data)
     assert response_login.status_code == 200
     print("Login response:", response_login.json())
@@ -15,7 +17,7 @@ def test_verify_admin_using_group_register_password_api(client, db_session, basi
     # Create atests/ApiTests/test_group_register_password_api.py group register password
     group_register_password_data = {
         "group_id": 2,
-        "expires_at": expiration_strig,
+        "expires_at": expiration_time.isoformat(),  # Ensure the date is in ISO format
     }
     response_create_password = client.post("/api/user/superior-group/generate-group-password", json=group_register_password_data)
     assert response_create_password.status_code == 200

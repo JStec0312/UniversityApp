@@ -16,6 +16,7 @@ class AdminOut(BaseModel):
     user_id: int
     display_name: str
     group_id: int
+    group_name: str
 
 class AdminVerificationIn(BaseModel):
     """
@@ -49,6 +50,7 @@ class AdminAuthIn(BaseModel):
 class AdminAuthOut(BaseModel):
 
     admin: AdminOut
+
     
 
 class AdminMeOut(BaseModel):

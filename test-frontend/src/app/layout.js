@@ -1,5 +1,6 @@
 import "./globals.css";
 import {UserProvider} from "./UserContext";
+import { AdminProvider } from "./AdminContext";
 
 export default function RootLayout({ children }) {
 
@@ -7,7 +8,9 @@ export default function RootLayout({ children }) {
     <html lang="pl">
       <body>
         <UserProvider>
+          <AdminProvider>
             {children}
+          </AdminProvider>
         </UserProvider>
       </body>
     </html>

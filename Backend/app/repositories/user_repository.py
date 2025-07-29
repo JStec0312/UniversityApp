@@ -49,16 +49,15 @@ class UserRepository(BaseRepository[User]):
             raise ValueError("User does not exist")
         # Validating group password 
         from app.repositories.group_register_password_repository import GroupRegisterPasswordRepository
-        from datetime import datetime
+        from app.utils.timebox import Clock
         group_password_repo = GroupRegisterPasswordRepository(self.db)
         group_password_record = group_password_repo.get_by_token(group_password)
         if not group_password_record:
             raise ValueError("Group password does not exist")
-        if group_password_record.expires_at < datetime.now():
+        if Clock.is_after(Clock.now(), Clock.to_pl(group_password_record.expires_at)):
             raise ValueError("Group password has expired")
         if group_password_record.group_id != group_id:
             raise ValueError("Group password does not match the group ID")
-
 
         admin_repo = AdminRepository(self.db)
         admin = Admin(

@@ -77,7 +77,8 @@ class AdminService:
                 user_id=admin.user_id,
                 university_id=admin.user.university_id,
                 display_name=admin.user.display_name,
-                group_id=admin.group_id
+                group_id=admin.group_id,
+                group_name = admin.group.group_name
             )
         )
     

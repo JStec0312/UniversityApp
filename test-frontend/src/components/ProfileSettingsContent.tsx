@@ -27,7 +27,6 @@ export default function ProfileSettingsContent({email}) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         // Here you would submit the form data to your API
-        console.log("Form submitted:", formData);
         
         // Show success message
         setSuccessMessage("Settings updated successfully!");

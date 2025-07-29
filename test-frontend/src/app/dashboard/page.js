@@ -3,22 +3,22 @@
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { logout } from "@/api/authApi";
-import { useUser } from "@/app/UserContext";
+import { useSetUser } from "@/app/UserContext";
 
 export default function DashboardPage() {
-  const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname(); // np. "/dashboard"
   const base = pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
 
+  const setUser = useSetUser();
+
   const handleLogout = async () => {
     try {
       await logout();
-      user.setUser(null); 
+      setUser(null); // Reset user state
       router.push("/");
     } catch (error) {
       console.error("Logout error:", error);
-      alert("An error occurred while logging out. Please try again.");
     }
   };
 

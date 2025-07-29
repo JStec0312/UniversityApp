@@ -7,4 +7,17 @@ class EventService:
 
     def get_upcoming_events(self, university_id: int):
 
-        return self.event_repo.get_upcoming_events(university_id=university_id)
+        events =  self.event_repo.get_upcoming_events(university_id=university_id)
+        from app.schemas.event import EventOutNotDetailed
+        return [
+            EventOutNotDetailed(
+                id=event.id,
+                title=event.title,
+                description=event.description,
+                start_date=event.start_date,
+                end_date=event.end_date,
+                location=event.location,
+                image_url=event.image_url,
+                group_name=event.group_name if event.group else None
+            ) for event in events
+        ]

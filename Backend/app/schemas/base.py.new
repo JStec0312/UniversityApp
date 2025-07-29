@@ -1,0 +1,36 @@
+"""
+Base schema module for Pydantic models.
+
+This module provides base Pydantic models for schema inheritance
+throughout the application.
+"""
+
+from pydantic import BaseModel as PydanticBaseModel
+from datetime import datetime
+from typing import Optional
+from app.schemas.datetime_field import DateTimeField
+
+
+class BaseSchema(PydanticBaseModel, DateTimeField):
+    """
+    Base schema for consistent schema structure.
+    
+    This class serves as the foundation for all Pydantic schemas
+    in the application. It configures the ORM mode to allow working
+    with SQLAlchemy models and defines common fields.
+    
+    Inherits from DateTimeField to ensure all datetime fields are
+    properly handled with Poland timezone info.
+    """
+    id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    
+    class Config:
+        """
+        Pydantic configuration class.
+        
+        This configuration enables ORM mode, which allows Pydantic to work
+        with SQLAlchemy ORM models directly.
+        """
+        orm_mode = True
+        from_attributes = True  # New Pydantic v2 attribute

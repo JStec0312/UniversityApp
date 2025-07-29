@@ -12,6 +12,7 @@ def test_see_events(client, event_api_seed):
     assert response_see_events.status_code == 200
     events = response_see_events.json()
     assert len(events) == 1
+    
 
 def test_see_events_unauthorized(client):
     response = client.get("/api/event/upcoming")

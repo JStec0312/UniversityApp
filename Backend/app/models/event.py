@@ -21,3 +21,6 @@ class Event(BaseModel):
     group = relationship("Group", back_populates="events")
     rsvps = relationship("EventRSVP", back_populates="event")
     university = relationship("University", back_populates="events")
+    @property
+    def group_name(self):
+        return self.group.group_name if self.group else None
