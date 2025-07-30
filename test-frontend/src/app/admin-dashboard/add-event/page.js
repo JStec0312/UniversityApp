@@ -3,6 +3,7 @@ import { useState } from "react";
 import EventWindow from "@/components/EventWindow";
 import EventWindowDetailed from "@/components/EventWindowDetailed";
 import { useAdmin } from "@/app/AdminContext";
+import { addEvent } from "@/api/addEntitiesApi";
 
 export default function AddEventPage() {
   // This page is for adding a new event
@@ -17,6 +18,16 @@ export default function AddEventPage() {
     title: "",
     group_name: "test",
   });
+
+  const handleAddEventSubmit = async () => {
+    try {
+      const response = await addEvent(event);
+
+    } catch (error) {
+      console.error("Error adding event:", error);
+    }
+  }
+    
 
   const [eventClicked, setEventClicked] = useState(false);
 
@@ -77,6 +88,12 @@ export default function AddEventPage() {
             onChange={setEventOnInputChange}
             className="border p-2 rounded"
           />
+          <button
+            type="button"
+            onClick={handleAddEventSubmit}
+            className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+            Add Event
+          </button>
         </form>
 
         {/* Podgląd wydarzenia */}

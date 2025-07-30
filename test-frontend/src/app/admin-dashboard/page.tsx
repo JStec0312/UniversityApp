@@ -13,7 +13,7 @@ export default function AdminDashboardPage() {
     <div>
       <h1>Admin Dashboard</h1>
       <p>Welcome to the admin dashboard!</p>
-      <p>Loged as: </p>
+      <p>Loged as: {admin.groupName}</p>
       <div className="flex flex-row items-center justify-center gap-8 mt-8">
         <Link href={go("/add-event")} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
           Create Event
