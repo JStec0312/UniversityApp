@@ -10,7 +10,10 @@ class News(BaseModel):
     
     title = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
-    admin_id = Column(Integer, ForeignKey("admins.id"), nullable=False)
-    
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    university_id = Column(Integer, ForeignKey("universities.id"), nullable=False)
+    image_url = Column(String(512), nullable=True) 
     # Relationships
-    admin = relationship("Admin", back_populates="news")
+    group = relationship("Group", back_populates="news")
+    university = relationship("University", back_populates="news")
+    

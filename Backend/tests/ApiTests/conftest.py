@@ -480,3 +480,14 @@ def event_api_seed(db_session):
     return _seed
         
         
+
+@pytest.fixture
+def superior_admin_login_on_base_seed(client, basic_seed):
+    def _seed():
+        basic_seed()
+        response = client.post("/api/user/admin/auth", json={
+            "email": "admin@gmail.com",
+            "password": "password"
+        })
+    return _seed
+    

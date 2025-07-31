@@ -136,3 +136,13 @@ class RepositoryFactory:
         from app.repositories.group_repository import GroupRepository
         return GroupRepository(self.db)
     
+    def get_news_repository(self) -> BaseRepository:
+        """
+        Create and return a NewsRepository instance.
+        
+        Returns:
+            BaseRepository: Repository for news-related database operations
+        """
+        from app.repositories.news_repository import NewsRepository
+        return NewsRepository(self.db)
+    

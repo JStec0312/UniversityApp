@@ -14,5 +14,4 @@ class Admin(BaseModel):
     # Use string reference to avoid circular import
     group = relationship("Group", foreign_keys=[group_id], back_populates="admins")  # Link to the group
     
-    news = relationship("News", back_populates="admin")  # News posts created by this admin
     discounts = relationship("Discount", back_populates="admin")  # Discounts created by this admin

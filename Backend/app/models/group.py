@@ -17,4 +17,4 @@ class Group(BaseModel):
     events = relationship("Event", back_populates="group")  # Events associated with this group
     superior_groups = relationship("SuperiorGroup", back_populates="group")  # Hierarchical relationships
     group_register_passwords = relationship("GroupRegisterPassword", back_populates="group")  # Passwords for group registration
-    
+    news = relationship("News", back_populates="group")  # News posts associated with this group
