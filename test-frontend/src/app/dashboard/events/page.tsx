@@ -1,11 +1,12 @@
 "use client";
 
 import { getUpcomingEvents, getPastEvents, getEventsByName, getAllEvents } from "@/api/eventsApi";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Event } from "@/types/Event";
 import EventCard from "@/components/EventCard";
-import EventDetailModal from "@/components/EventDetailModal";
+import Group from "@/types/Group";
+import { getGroups } from "@/api/groupsApi";
 
 export default function EventsPage() {
     const router = useRouter();
@@ -17,8 +18,23 @@ export default function EventsPage() {
     const [hasMoreEvents, setHasMoreEvents] = useState(true);
     const [viewMode, setViewMode] = useState<'upcoming' | 'past'>('upcoming');
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+    const [selectedGroup, setSelectedGroup] = useState<string>("");
+    
+    const [studentGroups, setStudentGroups] = useState<Group[]>([]);
     const eventsPerPage = 10;
+
+    useEffect(() => {
+        const fetchGroups = async () => {
+            try {
+                const groups = await getGroups();
+                setStudentGroups(groups);
+            } catch (error) {
+                console.error("Error fetching groups:", error);
+            }
+        };
+        fetchGroups();
+    }, []);
+
     
     useEffect(() => {
         const fetchEvents = async () => {
@@ -49,12 +65,14 @@ export default function EventsPage() {
             if (searchTerm.trim()) {
                 try {
                     const searchResults = await getEventsByName(searchTerm.trim());
-                    // Filter search results by view mode
+                    // Filter search results by view mode and group
                     const now = new Date();
                     const filteredResults = searchResults.filter((event: Event) => {
                         const eventDate = new Date(event.start_date);
                         const isUpcoming = eventDate > now;
-                        return viewMode === 'upcoming' ? isUpcoming : !isUpcoming;
+                        const matchesViewMode = viewMode === 'upcoming' ? isUpcoming : !isUpcoming;
+                        const matchesGroup = selectedGroup === "" || event.group_name === selectedGroup;
+                        return matchesViewMode && matchesGroup;
                     });
                     
                     setFilteredEvents(filteredResults);
@@ -63,8 +81,11 @@ export default function EventsPage() {
                     setFilteredEvents([]);
                 }
             } else {
-                // If no search term, use the events from the main fetch
-                setFilteredEvents(events);
+                // If no search term, use the events from the main fetch and apply group filter
+                const groupFilteredEvents = selectedGroup === "" 
+                    ? events 
+                    : events.filter(event => event.group_name === selectedGroup);
+                setFilteredEvents(groupFilteredEvents);
             }
         };
 
@@ -73,12 +94,15 @@ export default function EventsPage() {
             if (searchTerm.trim()) {
                 searchEvents();
             } else {
-                setFilteredEvents(events);
+                const groupFilteredEvents = selectedGroup === "" 
+                    ? events 
+                    : events.filter(event => event.group_name === selectedGroup);
+                setFilteredEvents(groupFilteredEvents);
             }
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, events, viewMode]);
+    }, [searchTerm, events, viewMode, selectedGroup]);
 
     // Function to switch between view modes
     const switchViewMode = (mode: 'upcoming' | 'past') => {
@@ -87,6 +111,7 @@ export default function EventsPage() {
         setCurrentPage(1);
         setHasMoreEvents(true);
         setSearchTerm(""); // Clear search when switching modes
+        setSelectedGroup(""); // Clear group filter when switching modes
     };
 
     // Navigation functions
@@ -105,6 +130,8 @@ export default function EventsPage() {
             setCurrentPage(Math.max(1, currentPage - 1));
         }
     };
+
+    
 
     // Format date string to a more readable format
     const formatDate = (dateString: string) => {
@@ -169,7 +196,7 @@ export default function EventsPage() {
 
                 {/* Enhanced Search Bar */}
                 <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 p-6 mb-8">
-                    <div className="flex flex-col sm:flex-row gap-6 items-end">
+                    <div className="flex flex-col lg:flex-row gap-6 items-end">
                         <div className="flex-1 w-full">
                             <label className="flex text-sm font-semibold text-gray-700 mb-3 items-center gap-2">
                                 🔍 Search Events
@@ -197,10 +224,31 @@ export default function EventsPage() {
                                 )}
                             </div>
                         </div>
-                        {searchTerm && (
+                        
+                        <div className="w-full lg:w-64">
+                            <label className="flex text-sm font-semibold text-gray-700 mb-3 items-center gap-2">
+                                🏷️ Filter by Group
+                            </label>
+                            <select
+                                value={selectedGroup}
+                                onChange={(e) => setSelectedGroup(e.target.value)}
+                                className="w-full px-4 py-4 border-2 border-gray-200 text-gray-800 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-colors duration-200 bg-white/90 backdrop-blur-sm"
+                            >
+                                <option value="">All Groups</option>
+                                {studentGroups.map((group) => (
+                                    <option key={group.group_id} value={group.group_name}>
+                                        {group.group_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        
+                        {(searchTerm || selectedGroup) && (
                             <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-blue-700 font-medium flex items-center gap-2">
                                 <span className="text-blue-500">📊</span>
-                                Found {filteredEvents.length} events matching "{searchTerm}"
+                                Found {filteredEvents.length} events
+                                {searchTerm && ` matching "${searchTerm}"`}
+                                {selectedGroup && ` in "${selectedGroup}"`}
                             </div>
                         )}
                     </div>
@@ -229,7 +277,7 @@ export default function EventsPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {filteredEvents.map((event) => (
                                     <EventCard 
-                                        onClick={() => setSelectedEvent(event)} 
+                                        onClick={() => router.push(`/dashboard/events/${event.id}`)} 
                                         key={event.id} 
                                         event={event} 
                                     />
@@ -243,24 +291,36 @@ export default function EventsPage() {
                             {searchTerm ? '🔍' : '📭'}
                         </div>
                         <h3 className="text-2xl font-bold text-gray-600 mb-4">
-                            {searchTerm 
-                                ? `No events found matching "${searchTerm}"` 
+                            {searchTerm || selectedGroup
+                                ? `No events found${searchTerm ? ` matching "${searchTerm}"` : ''}${selectedGroup ? ` in "${selectedGroup}"` : ''}` 
                                 : `No ${viewMode} events available`
                             }
                         </h3>
                         <p className="text-gray-500 mb-6">
-                            {searchTerm 
-                                ? "Try adjusting your search terms or browse all events" 
+                            {searchTerm || selectedGroup
+                                ? "Try adjusting your search terms or filters, or browse all events" 
                                 : `Check back later for new ${viewMode} events`
                             }
                         </p>
-                        {searchTerm && (
-                            <button
-                                onClick={() => setSearchTerm("")}
-                                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-colors duration-200"
-                            >
-                                Clear Search
-                            </button>
+                        {(searchTerm || selectedGroup) && (
+                            <div className="flex gap-3 justify-center">
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm("")}
+                                        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-colors duration-200"
+                                    >
+                                        Clear Search
+                                    </button>
+                                )}
+                                {selectedGroup && (
+                                    <button
+                                        onClick={() => setSelectedGroup("")}
+                                        className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-teal-700 transition-colors duration-200"
+                                    >
+                                        Clear Group Filter
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
                 )}
@@ -300,15 +360,6 @@ export default function EventsPage() {
                     </div>
                 )}
             </div>
-
-            {/* Event Detail Modal */}
-            {selectedEvent && (
-                <EventDetailModal 
-                    event={selectedEvent} 
-                    isOpen={!!selectedEvent}
-                    onClose={() => setSelectedEvent(null)}
-                />
-            )}
         </div>
     );
 

@@ -1,5 +1,5 @@
 "use client";
-import {useUser} from '@/app/UserContext';
+import {useUser} from '@/app/context/UserContext';
 import { useState, useEffect } from 'react';
 import ProfilePageContent from "@/components/ProfilePageContent";
 export default function ProfilePage() {

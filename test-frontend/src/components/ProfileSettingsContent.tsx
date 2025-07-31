@@ -1,5 +1,5 @@
 "use client";
-import { useUser } from "@/app/UserContext";
+import { useUser } from "@/app/context/UserContext";
 import { useState } from "react";
 
 export default function ProfileSettingsContent({email}) {

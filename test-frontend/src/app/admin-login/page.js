@@ -2,8 +2,9 @@
 import {useState} from 'react';
 import { useRouter } from 'next/navigation';
 import { adminLogin } from '@/api/adminAuthApi';
-import { useUser } from '@/app/UserContext';
-import { useAdmin } from '../AdminContext';
+import { useUser } from '@/app/context/UserContext';
+import { useAdmin } from '../context/AdminContext';
+import { getGroups } from '@/api/groupsApi';
 export default function AdminLoginPage(){
     const {setUser} = useUser();
     const {setAdmin} = useAdmin();
@@ -29,7 +30,7 @@ export default function AdminLoginPage(){
             const me = {displayName: response.admin.display_name, universityId: response.admin.university_id, userId: response.admin.user_id, groupId: response.admin.group_id, adminId: response.admin.admin_id, role: 'admin'}
             setUser(me); 
             const admin = {displayName: response.admin.display_name, universityId: response.admin.university_id, userId: response.admin.user_id, groupId: response.admin.group_id, adminId: response.admin.admin_id, groupName: response.admin.group_name, role: 'admin'};
-            setAdmin(admin); 
+            setAdmin(admin);
             setTimeout(() => {
                 router.push('/admin-dashboard'); // Redirect to admin dashboard
             }, 2000);

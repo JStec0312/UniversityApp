@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Request, Query
+from fastapi import APIRouter, Depends, Request, Query, status, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 import logging
 from app.core.db import get_db
@@ -94,12 +95,28 @@ def update_event(
     event_id: int,
     event_data: EventUpdateIn,
     db: Session = Depends(get_db),
-    user: dict = Depends(require_roles([
+    user = Depends(require_roles([
         RoleEnum.ADMIN.value,
         RoleEnum.SUPERIOR_ADMIN.value,
-        RoleEnum.STUDENT.value,
     ]))
     ):
     event_repo = RepositoryFactory(db).get_event_repository()
     event_service = ServiceFactory.get_event_service(event_repo)
-    return event_service.update_event(event_id=event_id, university_id=user["university_id"], event_data=event_data)
+    return event_service.update_event(event_id=event_id, university_id=user["university_id"], event_data=event_data, user_role=user["role"], user_id=user["user_id"])
+
+@router.delete("/{event_id}")
+def delete_event(
+    response: Response,
+    event_id: int,
+    db: Session = Depends(get_db),
+    user = Depends(require_roles([
+        RoleEnum.ADMIN.value,
+        RoleEnum.SUPERIOR_ADMIN.value,
+    ]))
+):
+    event_repo = RepositoryFactory(db).get_event_repository()
+    event_service = ServiceFactory.get_event_service(event_repo)
+    event_service.delete_event(event_id=event_id, university_id=user["university_id"], user_role=user["role"], user_id=user["user_id"])
+    response.status_code = status.HTTP_204_NO_CONTENT
+    return {"detail": "Event deleted successfully"}
+    

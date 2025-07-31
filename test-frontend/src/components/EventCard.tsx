@@ -42,6 +42,7 @@ export default function EventCard({ event, onClick }: EventCardProps) {
                         {formatDate(event.start_date)}
                     </span>
                 </div>
+                <span className="text-green-800 font-bold">{event.group_name}</span>
                 <h2 className="text-xl font-bold text-gray-800 mb-2 line-clamp-1">
                     {event.title || "Untitled Event"}
                 </h2>

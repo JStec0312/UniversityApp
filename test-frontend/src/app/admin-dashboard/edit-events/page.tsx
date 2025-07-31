@@ -7,6 +7,7 @@ import DeleteConfirmationModal from '@/components/DeleteConfirmationEventModal.j
 import { Event } from '@/types/Event';
 import { Eye} from 'lucide-react';
 import Link from 'next/link';
+import { deleteEvent } from '@/api/eventsApi';
 export default function EditEventPageView() {
     const router = useRouter();
     const [events, setEvents] = useState<Event[]>([]);
@@ -143,9 +144,10 @@ export default function EditEventPageView() {
         setShowDeleteModal(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async() => {
         if (eventToDelete) {
             setEvents(events.filter(event => event.id !== eventToDelete.id));
+            await deleteEvent(eventToDelete.id);
             setShowDeleteModal(false);
             setEventToDelete(null);
         }

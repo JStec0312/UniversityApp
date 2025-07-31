@@ -2,8 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {login} from '@/api/authApi';
-import { useUser } from './UserContext';
-
+import { useUser } from './context/UserContext';
 export default function Home() {
   const {setUser} = useUser();
   const navigation = useRouter();
@@ -11,7 +10,6 @@ export default function Home() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();

@@ -35,7 +35,11 @@ class GroupService:
         )
     
     def get_groups_by_university_id(self, university_id: int):
-        groups = self.group_repo.get_by_university_id(university_id)
+        groups = self.group_repo.getPaginatedWithConditions(
+            conditions=(Group.university_id == university_id,),
+            skip=0,
+            limit=None
+        )
         if not groups:
             raise HTTPException(status_code=404, detail="No groups found for this university")
         
@@ -46,5 +50,4 @@ class GroupService:
                 university_id=group.university_id
             )
             for group in groups]
-        
         

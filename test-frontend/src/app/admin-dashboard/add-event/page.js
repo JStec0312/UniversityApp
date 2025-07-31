@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import EventCard from "@/components/EventCard";
 import EventDetailModal from "@/components/EventDetailModal";
-import { useAdmin } from "@/app/AdminContext";
+import { useAdmin } from "@/app/context/AdminContext";
 import { addEvent } from "@/api/addEntitiesApi";
 
 export default function AddEventPage() {

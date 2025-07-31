@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { updateEvent } from '@/api/eventsApi';
 export default function EditEventModal({ event, onSave, onClose }) {
     const [formData, setFormData] = useState({
         ...event,
@@ -14,9 +15,15 @@ export default function EditEventModal({ event, onSave, onClose }) {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSave(formData);
+
+        try {
+            await updateEvent(event.id, formData);
+            onSave(formData);
+        } catch (error) {
+            console.error("Error updating event:", error);
+        }
     };
 
     return (

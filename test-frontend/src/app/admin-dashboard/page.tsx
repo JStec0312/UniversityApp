@@ -1,8 +1,8 @@
 "use client";
-import { useUser } from "@/app/UserContext";
+import { useUser } from "@/app/context/UserContext";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useAdmin } from "../AdminContext";
+import { useAdmin } from "../context/AdminContext";
 
 import { useEffect, useState } from "react";
 import Admin from "@/types/Admin";

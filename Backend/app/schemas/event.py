@@ -23,7 +23,6 @@ class AddEventIn(BaseModel):
         return value
 
 class EventUpdateIn(BaseModel):
-    id: int
     title: Optional[str] = None
     description: Optional[str] = None
     start_date: Optional[datetime] = None

@@ -1,5 +1,5 @@
 import instance from "@/lib/axiosInstance";
-
+import { UpdateEventType } from "@/types/UpdateEventType";
 
 export const getUpcomingEvents = async (limit: number, offset: number) => {
     try{
@@ -67,6 +67,26 @@ export const fetchEventById = async (id: number) => {
         return response.data;
     } catch (error) {
         console.error("Error fetching event by ID:", error);
+        throw error;
+    }
+}
+
+export const updateEvent = async (id: number, eventData: UpdateEventType) => {
+    try {
+        const response = await instance.patch(`/event/${id}`, eventData);
+        return response.data;
+    } catch (error) {
+        console.error("Error updating event:", error);
+        throw error;
+    }
+}
+
+export const deleteEvent = async (id: number) => {
+    try {
+        const response = await instance.delete(`/event/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting event:", error);
         throw error;
     }
 }
