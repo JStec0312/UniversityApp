@@ -22,6 +22,15 @@ class AddEventIn(BaseModel):
                 raise ValueError("Date must be in format YYYY-MM-DDTHH:MM (e.g. 2025-07-24T14:30)")
         return value
 
+class EventUpdateIn(BaseModel):
+    id: int
+    title: Optional[str] = None
+    description: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    location: Optional[str] = None
+    image_url: Optional[str] = None
+
 
 class EventOutNotDetailed(BaseModel):
     id: int

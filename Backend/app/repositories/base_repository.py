@@ -154,3 +154,20 @@ class BaseRepository(Generic[T]):
             List of records based on pagination parameters
         """
         return self.db.query(self.model).offset(skip).limit(limit).all()
+    
+    def getPaginatedWithConditions(self, conditions:tuple, skip: int = 0, limit: int = 100) -> List[T]:
+        """
+        Get paginated records with specific conditions.
+        
+        Args:
+            conditions: Tuple of conditions to filter records
+            skip: Number of records to skip (for pagination)
+            limit: Maximum number of records to return
+            
+        Returns:
+            List of records matching the conditions and pagination parameters
+        """
+        query = self.db.query(self.model)
+        for condition in conditions:
+            query = query.filter(condition)
+        return query.offset(skip).limit(limit).all()
