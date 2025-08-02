@@ -40,3 +40,5 @@ class EventOutNotDetailed(BaseModel):
     location: str
     image_url: Optional[str] = None
     group_name: str
+
+

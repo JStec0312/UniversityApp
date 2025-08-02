@@ -17,7 +17,7 @@ class EventService:
             Event.start_date >= Clock.now()
         )
 
-        events =  self.event_repo.getPaginatedWithConditions(conditions=conditions, skip=offset, limit=limit)
+        events =  self.event_repo.getPaginatedWithConditions(conditions=conditions, offset=offset, limit=limit)
         return [
             EventOutNotDetailed(
                 id=event.id,
@@ -37,7 +37,7 @@ class EventService:
             Event.end_date < Clock.now()
         )
 
-        events = self.event_repo.getPaginatedWithConditions(conditions=conditions, skip=offset, limit=limit)
+        events = self.event_repo.getPaginatedWithConditions(conditions=conditions, offset=offset, limit=limit)
         return [
             EventOutNotDetailed(
                 id=event.id,
@@ -57,7 +57,7 @@ class EventService:
             Event.title.ilike(f"%{name}%")
         )
 
-        events = self.event_repo.getPaginatedWithConditions(conditions=conditions, skip=offset, limit=limit)
+        events = self.event_repo.getPaginatedWithConditions(conditions=conditions, offset=offset, limit=limit)
         return [
             EventOutNotDetailed(
                 id=event.id,
@@ -74,7 +74,7 @@ class EventService:
     def get_all_events(self, university_id: int, limit: int = 20, offset: int = 0):
         conditions = (Event.university_id == university_id,)
 
-        events = self.event_repo.getPaginatedWithConditions(conditions=conditions, skip=offset, limit=limit)
+        events = self.event_repo.getPaginatedWithConditions(conditions=conditions, offset=offset, limit=limit)
         return [
             EventOutNotDetailed(
                 id=event.id,
@@ -91,7 +91,7 @@ class EventService:
     def get_event_by_id(self, event_id: int, university_id: int):
         events = self.event_repo.getPaginatedWithConditions(
             conditions=(Event.id == event_id, Event.university_id == university_id),
-            skip=0,
+            offset=0,
             limit=1
         )
         event = events[0] if events else None
@@ -120,7 +120,7 @@ class EventService:
         from app.utils.role_enum import RoleEnum
         if user_role != RoleEnum.SUPERIOR_ADMIN.value:
             admin_repo = RepositoryFactory(self.event_repo.db).get_admin_repository()
-            if not admin_repo.get_group_id_by_user_id(user_id):
+            if admin_repo.get_group_id_by_user_id(user_id) != event.group_id:
                 raise HTTPException(status_code=403, detail="You do not have permission to edit this event")
 
 

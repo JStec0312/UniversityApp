@@ -13,6 +13,24 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 export const AdminProvider = ({ children }: { children: React.ReactNode }) => {
   const [admin, setAdmin] = useState<Admin | null>(null);
 
+  // np. automatyczne ładowanie z localStorage po wejściu
+  useEffect(() => {
+    const stored = localStorage.getItem("admin");
+    if (stored) {
+      try {
+        setAdmin(JSON.parse(stored));
+      } catch (_) {}
+    }
+  }, []);
+
+  useEffect(() => {
+    if (admin) {
+      localStorage.setItem("admin", JSON.stringify(admin));
+    } else {
+      localStorage.removeItem("admin");
+    }
+  }, [admin]);
+
   return (
     <AdminContext.Provider value={{ admin, setAdmin }}>
       {children}

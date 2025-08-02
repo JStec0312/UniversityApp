@@ -155,7 +155,7 @@ class BaseRepository(Generic[T]):
         """
         return self.db.query(self.model).offset(skip).limit(limit).all()
     
-    def getPaginatedWithConditions(self, conditions:tuple, skip: int = 0, limit: int = 100) -> List[T]:
+    def getPaginatedWithConditions(self, conditions:tuple, offset: int = 0, limit: int = 100, order_by: Optional[str] = None) -> List[T]:
         """
         Get paginated records with specific conditions.
         
@@ -170,4 +170,6 @@ class BaseRepository(Generic[T]):
         query = self.db.query(self.model)
         for condition in conditions:
             query = query.filter(condition)
-        return query.offset(skip).limit(limit).all()
+        if order_by is not None:
+            query = query.order_by(order_by)
+        return query.offset(offset).limit(limit).all()

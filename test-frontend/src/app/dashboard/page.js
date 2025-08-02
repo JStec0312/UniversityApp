@@ -29,7 +29,7 @@ export default function DashboardPage() {
       <p className="text-gray-600">This is the dashboard page.</p>
       <button onClick={handleLogout}>Logout</button>
       <ul className="flex flex-row items-center justify-center gap-8 mt-8">
-        <li><Link href={go("/announcements")}>Ogłoszenia</Link></li>
+        <li><Link href={go("/news")}>Ogłoszenia</Link></li>
         <li><Link href={go("/groups")}>Grupy</Link></li>
         <li><Link href={go("/discounts")}>Zniżki</Link></li>
         <li><Link href={go("/events")}>Wydarzenia</Link></li>

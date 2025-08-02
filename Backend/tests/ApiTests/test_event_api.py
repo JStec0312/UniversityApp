@@ -21,10 +21,11 @@ def test_see_events_unauthorized(client):
 
 def test_edit_event(client, event_api_seed):
     event_api_seed()
-    response = client.post("/api/user/student/auth", json={
-        "email": "test@gmail.com",
-        "password": "testpassword"
+    response = client.post("/api/user/admin/auth", json={
+        "email": "admin@gmail.com",
+        "password": "adminpassword"
     })
+    assert response.status_code == 200
     
     response_edit_event = client.patch("/api/event/1", json={
         "title": "Updated Event Title",
