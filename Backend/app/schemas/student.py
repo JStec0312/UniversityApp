@@ -17,6 +17,7 @@ class StudentOut(BaseModel):
     display_name: str
     faculty_id: Optional[int] = None
     major_id: Optional[int] = None
+    avatar_image_url: Optional[str] = None  # URL to the student's avatar image
 
 class StudentAuthIn(BaseModel):
     email: EmailStr

@@ -1,6 +1,6 @@
 # app/api/user_api.py
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.schemas.user import UserCreate, UserOut
@@ -30,3 +30,21 @@ def get_user_email(db: Session = Depends(get_db), user = Depends(require_roles([
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
     return user_service.get_user_email(user["user_id"])
+
+@router.get("/search", response_model=list[UserOut])
+def search_users (
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_roles([RoleEnum.ADMIN.value, RoleEnum.SUPERIOR_ADMIN.value, RoleEnum.STUDENT.value])),
+    name: str = Query(..., min_length=1, max_length=100),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0)
+):
+    user_repo = RepositoryFactory(db).get_user_repository()
+    user_service = ServiceFactory.get_user_service(user_repo)
+    return user_service.search_users(name=name, university_id=user["university_id"], limit=limit, offset=offset)
+
+@router.get("/{user_id}", response_model=UserOut)
+def get_student(user_id: int, user = Depends(require_roles([RoleEnum.ADMIN.value, RoleEnum.SUPERIOR_ADMIN.value, RoleEnum.STUDENT.value])), db: Session = Depends(get_db)):
+    user_repo = RepositoryFactory(db).get_user_repository()
+    user_service = ServiceFactory.get_user_service(user_repo)
+    return user_service.get_user_by_id(user_id=user_id, university_id=user["university_id"])

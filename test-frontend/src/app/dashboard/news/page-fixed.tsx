@@ -97,29 +97,29 @@ export default function NewsPage() {
         <div className="space-y-8">
             {/* Header */}
             <div className="text-center space-y-4">
-                <div className="inline-flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full px-6 py-2 shadow-lg border border-blue-200">
+                <div className="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-full px-6 py-2 shadow-lg border border-white/20">
                     <Newspaper className="w-5 h-5 text-blue-600" />
-                    <span className="text-sm font-medium text-slate-800">Ogłoszenia</span>
+                    <span className="text-sm font-medium text-gray-700">Ogłoszenia</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
                     Najnowsze Ogłoszenia
                 </h1>
-                <p className="text-xl text-slate-700 max-w-2xl mx-auto">
+                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                     Bądź na bieżąco z najważniejszymi informacjami uniwersyteckimi
                 </p>
             </div>
 
             {/* Search Bar */}
-            <Card className="bg-white/80 backdrop-blur-sm border-blue-100 shadow-md">
+            <Card className="bg-white/70 backdrop-blur-sm border-white/20">
                 <CardContent className="p-6">
                     <div className="relative max-w-md mx-auto">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                             type="text"
                             placeholder="Szukaj ogłoszeń..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 bg-white/95 backdrop-blur-sm border-blue-200"
+                            className="pl-10 bg-white/90 backdrop-blur-sm border-white/20"
                         />
                     </div>
                     {searchTerm && (

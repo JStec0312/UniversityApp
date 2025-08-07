@@ -1,12 +1,27 @@
 "use client";
 
-import { getUpcomingEvents, getPastEvents, getEventsByName, getAllEvents } from "@/api/eventsApi";
-import { use, useEffect, useState } from "react";
+import { getUpcomingEvents, getPastEvents, getEventsByName } from "@/api/eventsApi";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Event } from "@/types/Event";
 import EventCard from "@/components/EventCard";
 import Group from "@/types/Group";
 import { getGroups } from "@/api/groupsApi";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Search, 
+  Filter, 
+  Calendar, 
+  Clock, 
+  Users, 
+  ChevronLeft, 
+  ChevronRight,
+  Sparkles 
+} from "lucide-react";
 
 export default function EventsPage() {
     const router = useRouter();
@@ -19,9 +34,9 @@ export default function EventsPage() {
     const [viewMode, setViewMode] = useState<'upcoming' | 'past'>('upcoming');
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedGroup, setSelectedGroup] = useState<string>("");
-    
     const [studentGroups, setStudentGroups] = useState<Group[]>([]);
-    const eventsPerPage = 10;
+    
+    const eventsPerPage = 9;
 
     useEffect(() => {
         const fetchGroups = async () => {
@@ -35,7 +50,6 @@ export default function EventsPage() {
         fetchGroups();
     }, []);
 
-    
     useEffect(() => {
         const fetchEvents = async () => {
             setEventsLoading(true);
@@ -46,8 +60,6 @@ export default function EventsPage() {
                 
                 setEvents(fetchedEvents);
                 setFilteredEvents(fetchedEvents);
-                
-                // Check if there are more events
                 setHasMoreEvents(fetchedEvents.length === eventsPerPage);
             } catch (error) {
                 console.error("Error fetching events:", error);
@@ -57,15 +69,13 @@ export default function EventsPage() {
             }
         };
         fetchEvents();
-    }, [offset, viewMode, eventsPerPage]);
+    }, [offset, viewMode]);
 
-    // Handle search functionality
     useEffect(() => {
         const searchEvents = async () => {
             if (searchTerm.trim()) {
                 try {
                     const searchResults = await getEventsByName(searchTerm.trim());
-                    // Filter search results by view mode and group
                     const now = new Date();
                     const filteredResults = searchResults.filter((event: Event) => {
                         const eventDate = new Date(event.start_date);
@@ -81,7 +91,6 @@ export default function EventsPage() {
                     setFilteredEvents([]);
                 }
             } else {
-                // If no search term, use the events from the main fetch and apply group filter
                 const groupFilteredEvents = selectedGroup === "" 
                     ? events 
                     : events.filter(event => event.group_name === selectedGroup);
@@ -89,32 +98,10 @@ export default function EventsPage() {
             }
         };
 
-        // Debounce search to avoid too many API calls
-        const timeoutId = setTimeout(() => {
-            if (searchTerm.trim()) {
-                searchEvents();
-            } else {
-                const groupFilteredEvents = selectedGroup === "" 
-                    ? events 
-                    : events.filter(event => event.group_name === selectedGroup);
-                setFilteredEvents(groupFilteredEvents);
-            }
-        }, 300);
-
+        const timeoutId = setTimeout(searchEvents, 300);
         return () => clearTimeout(timeoutId);
     }, [searchTerm, events, viewMode, selectedGroup]);
 
-    // Function to switch between view modes
-    const switchViewMode = (mode: 'upcoming' | 'past') => {
-        setViewMode(mode);
-        setOffset(0);
-        setCurrentPage(1);
-        setHasMoreEvents(true);
-        setSearchTerm(""); // Clear search when switching modes
-        setSelectedGroup(""); // Clear group filter when switching modes
-    };
-
-    // Navigation functions
     const goToNextPage = () => {
         if (hasMoreEvents) {
             const newOffset = offset + eventsPerPage;
@@ -131,236 +118,241 @@ export default function EventsPage() {
         }
     };
 
-    
-
-    // Format date string to a more readable format
-    const formatDate = (dateString: string) => {
-        const options: Intl.DateTimeFormatOptions = { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        };
-        return new Date(dateString).toLocaleDateString(undefined, options);
+    const handleEventClick = (eventId?: number) => {
+        if (eventId) {
+            router.push(`/dashboard/events/${eventId}`);
+        }
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Enhanced Header */}
-                <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 rounded-2xl shadow-xl p-8 mb-8 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-white/5 backdrop-blur-sm"></div>
-                    <div className="absolute top-0 left-0 w-full h-full opacity-10">
-                        <div className="absolute top-4 left-4 w-32 h-32 bg-white rounded-full mix-blend-overlay"></div>
-                        <div className="absolute bottom-4 right-4 w-24 h-24 bg-white rounded-full mix-blend-overlay"></div>
-                    </div>
-                    
-                    <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                        <div className="flex-1">
-                            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">
-                                {viewMode === 'upcoming' ? '🎯 Upcoming Events' : '📚 Past Events'}
-                            </h1>
-                            <p className="text-blue-100 text-lg leading-relaxed">
-                                {viewMode === 'upcoming' 
-                                    ? 'Discover amazing events and expand your university experience' 
-                                    : 'Explore the memorable events from our university history'
-                                }
-                            </p>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+            {/* Compact Header Bar */}
+            <div className="bg-white shadow-sm border-b border-slate-200">
+                <div className="max-w-7xl mx-auto px-6 py-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                                <Calendar className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-slate-900">Wydarzenia</h1>
+                                <p className="text-slate-600 text-sm">Zarządzaj swoimi wydarzeniami</p>
+                            </div>
                         </div>
-                        
-                        <div className="flex flex-col sm:flex-row gap-3">
-                            <button
-                                onClick={() => switchViewMode('upcoming')}
-                                className={`px-6 py-3 rounded-xl font-semibold transition-colors duration-200 ${
-                                    viewMode === 'upcoming'
-                                        ? 'bg-white text-blue-600 shadow-lg ring-2 ring-white/50'
-                                        : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
-                                }`}
-                            >
-                                ⏰ Upcoming
-                            </button>
-                            <button
-                                onClick={() => switchViewMode('past')}
-                                className={`px-6 py-3 rounded-xl font-semibold transition-colors duration-200 ${
-                                    viewMode === 'past'
-                                        ? 'bg-white text-blue-600 shadow-lg ring-2 ring-white/50'
-                                        : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
-                                }`}
-                            >
-                                📖 Past
-                            </button>
+                        <div className="hidden md:flex items-center space-x-3">
+                            <div className="bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                                <span className="text-blue-700 font-semibold text-sm">15 aktywnych</span>
+                            </div>
+                            <div className="bg-purple-50 px-4 py-2 rounded-lg border border-purple-200">
+                                <span className="text-purple-700 font-semibold text-sm">3 w tym tygodniu</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Enhanced Search Bar */}
-                <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 p-6 mb-8">
-                    <div className="flex flex-col lg:flex-row gap-6 items-end">
-                        <div className="flex-1 w-full">
-                            <label className="flex text-sm font-semibold text-gray-700 mb-3 items-center gap-2">
-                                🔍 Search Events
-                            </label>
-                            <div className="relative group">
-                                <input
-                                    type="text"
-                                    placeholder="Search by event name..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 text-gray-800 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-colors duration-200 bg-white/90 backdrop-blur-sm"
-                                />
-                                <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                                    <svg className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
+            {/* Main Content Area */}
+            <div className="max-w-7xl mx-auto px-6 py-6">
+                <div className="grid lg:grid-cols-4 gap-6">
+                    {/* Sidebar Filters */}
+                    <div className="lg:col-span-1">
+                        <div className="space-y-6">
+                            {/* View Mode Card */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                <h3 className="font-semibold text-slate-900 mb-4">Typ wydarzeń</h3>
+                                <div className="space-y-2">
+                                    <button
+                                        onClick={() => {
+                                            setViewMode('upcoming');
+                                            setOffset(0);
+                                            setCurrentPage(1);
+                                            setSearchTerm("");
+                                            setSelectedGroup("");
+                                        }}
+                                        className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                                            viewMode === 'upcoming'
+                                                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
+                                                : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                                        }`}
+                                    >
+                                        <div className="flex items-center space-x-3">
+                                            <Clock className="w-5 h-5" />
+                                            <div>
+                                                <div className="font-medium">Nadchodzące</div>
+                                                <div className={`text-xs ${viewMode === 'upcoming' ? 'text-blue-100' : 'text-slate-500'}`}>
+                                                    Przyszłe wydarzenia
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setViewMode('past');
+                                            setOffset(0);
+                                            setCurrentPage(1);
+                                            setSearchTerm("");
+                                            setSelectedGroup("");
+                                        }}
+                                        className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                                            viewMode === 'past'
+                                                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
+                                                : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                                        }`}
+                                    >
+                                        <div className="flex items-center space-x-3">
+                                            <Calendar className="w-5 h-5" />
+                                            <div>
+                                                <div className="font-medium">Przeszłe</div>
+                                                <div className={`text-xs ${viewMode === 'past' ? 'text-blue-100' : 'text-slate-500'}`}>
+                                                    Archiwalne wydarzenia
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
                                 </div>
-                                {searchTerm && (
-                                    <button
-                                        onClick={() => setSearchTerm("")}
-                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            </div>
+
+                            {/* Search Card */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                <h3 className="font-semibold text-slate-900 mb-4">Wyszukaj</h3>
+                                <div className="space-y-4">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-black" />
+                                        <Input
+                                            placeholder="Nazwa wydarzenia..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="pl-10 border-slate-300 text-black focus:border-blue-500 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                                        <SelectTrigger className="border-slate-300 text-black focus:border-blue-500 focus:ring-blue-500">
+                                            <div className="flex items-center space-x-2">
+                                                <Filter className="h-4 w-4 text-slate-400" />
+                                                <SelectValue placeholder="Grupa" />
+                                            </div>
+                                        </SelectTrigger>
+                                        <SelectContent className="">
+                                            {studentGroups.map((group) => (
+                                                <SelectItem key={group.group_id} className="text-black" value={group.group_name}>
+                                                    {group.group_name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            {/* Results Info Card */}
+                            {(searchTerm || selectedGroup) && (
+                                <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-sm p-6 text-white">
+                                    <div className="flex items-center space-x-2">
+                                        <Sparkles className="w-5 h-5" />
+                                        <div>
+                                            <div className="font-semibold">Wyniki wyszukiwania</div>
+                                            <div className="text-blue-100 text-sm">
+                                                {filteredEvents.length} wydarzeń
+                                                {searchTerm && ` dla "${searchTerm}"`}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="lg:col-span-3">
+                        <div className="space-y-6">
+                            {eventsLoading ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {[...Array(6)].map((_, i) => (
+                                        <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-pulse">
+                                            <div className="h-48 bg-gradient-to-r from-slate-200 to-slate-300"></div>
+                                            <div className="p-6 space-y-3">
+                                                <div className="h-5 bg-slate-200 rounded w-3/4"></div>
+                                                <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                                                <div className="h-8 bg-slate-200 rounded w-full"></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <>
+                                    {filteredEvents.length > 0 ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {filteredEvents.map((event, index) => (
+                                                <EventCard
+                                                    key={event.id || index}
+                                                    event={event}
+                                                    onClick={() => handleEventClick(event.id)}
+                                                />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-16">
+                                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 max-w-md mx-auto">
+                                                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                                                    <Calendar className="w-8 h-8 text-white" />
+                                                </div>
+                                                <h3 className="text-xl font-bold text-slate-900 mb-3">
+                                                    Brak wydarzeń
+                                                </h3>
+                                                <p className="text-slate-600 mb-6 leading-relaxed">
+                                                    {searchTerm || selectedGroup 
+                                                        ? "Nie znaleziono wydarzeń spełniających kryteria wyszukiwania" 
+                                                        : `Obecnie brak ${viewMode === 'upcoming' ? 'nadchodzących' : 'przeszłych'} wydarzeń`
+                                                    }
+                                                </p>
+                                                {(searchTerm || selectedGroup) && (
+                                                    <Button 
+                                                        onClick={() => {
+                                                            setSearchTerm("");
+                                                            setSelectedGroup("");
+                                                        }}
+                                                        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg"
+                                                    >
+                                                        Wyczyść filtry
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {/* Pagination */}
+                            {!searchTerm && !selectedGroup && (
+                                <div className="flex justify-center items-center space-x-4 pt-8">
+                                    <Button
+                                        variant="outline"
+                                        onClick={goToPreviousPage}
+                                        disabled={offset === 0}
+                                        className="bg-white border-slate-300 hover:bg-slate-50 shadow-sm"
                                     >
-                                        ✕
-                                    </button>
-                                )}
-                            </div>
+                                        <ChevronLeft className="w-4 h-4 mr-2" />
+                                        Poprzednia
+                                    </Button>
+                                    
+                                    <div className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg shadow-lg font-semibold">
+                                        Strona {currentPage}
+                                    </div>
+                                    
+                                    <Button
+                                        variant="outline"
+                                        onClick={goToNextPage}
+                                        disabled={!hasMoreEvents}
+                                        className="bg-white border-slate-300 hover:bg-slate-50 shadow-sm"
+                                    >
+                                        Następna
+                                        <ChevronRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </div>
+                            )}
                         </div>
-                        
-                        <div className="w-full lg:w-64">
-                            <label className="flex text-sm font-semibold text-gray-700 mb-3 items-center gap-2">
-                                🏷️ Filter by Group
-                            </label>
-                            <select
-                                value={selectedGroup}
-                                onChange={(e) => setSelectedGroup(e.target.value)}
-                                className="w-full px-4 py-4 border-2 border-gray-200 text-gray-800 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-colors duration-200 bg-white/90 backdrop-blur-sm"
-                            >
-                                <option value="">All Groups</option>
-                                {studentGroups.map((group) => (
-                                    <option key={group.group_id} value={group.group_name}>
-                                        {group.group_name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        
-                        {(searchTerm || selectedGroup) && (
-                            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-blue-700 font-medium flex items-center gap-2">
-                                <span className="text-blue-500">📊</span>
-                                Found {filteredEvents.length} events
-                                {searchTerm && ` matching "${searchTerm}"`}
-                                {selectedGroup && ` in "${selectedGroup}"`}
-                            </div>
-                        )}
                     </div>
                 </div>
-
-                {/* Loading State */}
-                {eventsLoading ? (
-                    <div className="flex justify-center items-center h-64">
-                        <div className="animate-pulse flex flex-col items-center">
-                            <div className="h-16 w-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                            <p className="mt-4 text-gray-700 font-medium">Loading events...</p>
-                        </div>
-                    </div>
-                ) : filteredEvents.length > 0 ? (
-                    <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 overflow-hidden mb-8">
-                        <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100">
-                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-                                <span className="w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></span>
-                                {viewMode === 'upcoming' ? 'Upcoming Events' : 'Past Events'}
-                                <span className="ml-auto bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
-                                    {filteredEvents.length} events
-                                </span>
-                            </h2>
-                        </div>
-                        <div className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredEvents.map((event) => (
-                                    <EventCard 
-                                        onClick={() => router.push(`/dashboard/events/${event.id}`)} 
-                                        key={event.id} 
-                                        event={event} 
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 p-12 text-center mb-8">
-                        <div className="text-8xl mb-6 opacity-20">
-                            {searchTerm ? '🔍' : '📭'}
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-600 mb-4">
-                            {searchTerm || selectedGroup
-                                ? `No events found${searchTerm ? ` matching "${searchTerm}"` : ''}${selectedGroup ? ` in "${selectedGroup}"` : ''}` 
-                                : `No ${viewMode} events available`
-                            }
-                        </h3>
-                        <p className="text-gray-500 mb-6">
-                            {searchTerm || selectedGroup
-                                ? "Try adjusting your search terms or filters, or browse all events" 
-                                : `Check back later for new ${viewMode} events`
-                            }
-                        </p>
-                        {(searchTerm || selectedGroup) && (
-                            <div className="flex gap-3 justify-center">
-                                {searchTerm && (
-                                    <button
-                                        onClick={() => setSearchTerm("")}
-                                        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-colors duration-200"
-                                    >
-                                        Clear Search
-                                    </button>
-                                )}
-                                {selectedGroup && (
-                                    <button
-                                        onClick={() => setSelectedGroup("")}
-                                        className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-teal-700 transition-colors duration-200"
-                                    >
-                                        Clear Group Filter
-                                    </button>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Pagination - Only show when not searching */}
-                {!searchTerm && filteredEvents.length > 0 && (
-                    <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 p-6">
-                        <div className="flex justify-between items-center">
-                            <div className="text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-lg">
-                                Page {currentPage}
-                            </div>
-                            <div className="flex items-center space-x-3">
-                                <button
-                                    onClick={goToPreviousPage}
-                                    disabled={offset === 0}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-colors duration-200 ${
-                                        offset === 0
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-md'
-                                    }`}
-                                >
-                                    ← Previous
-                                </button>
-                                <button
-                                    onClick={goToNextPage}
-                                    disabled={!hasMoreEvents || filteredEvents.length === 0}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-colors duration-200 ${
-                                        !hasMoreEvents || filteredEvents.length === 0
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-md'
-                                    }`}
-                                >
-                                    Next →
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );
-
 }

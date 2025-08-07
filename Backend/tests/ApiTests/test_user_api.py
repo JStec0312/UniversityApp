@@ -84,3 +84,10 @@ def test_get_email(client, basic_seed):
     assert response.status_code == 200
     assert response.json() == "user@gmail.com"
 
+
+
+def test_search_users(client, superior_admin_login_on_base_seed ):
+    superior_admin_login_on_base_seed()
+    response = client.get("/api/user/search", params={"name": "Test User"})
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)

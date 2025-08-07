@@ -16,7 +16,7 @@ export default function Home() {
     try{
       const response = await login(email, password);
       if (response.student) {
-        const me = {displayName: response.student.display_name, universityId: response.student.university_id, userId: response.student.user_id, studentId : response.student.student_id, role: 'student'};
+        const me = {displayName: response.student.display_name, universityId: response.student.university_id, userId: response.student.user_id, studentId : response.student.student_id, role: 'student', avatarUrl: response.student.avatar_image_url};
         setUser(me);
         setSuccess('Login successful!');
         setError('');

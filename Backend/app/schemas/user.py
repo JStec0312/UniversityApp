@@ -10,7 +10,7 @@ class UserCreate(BaseModel):
 class UserOut(BaseModel):
     id: int
     display_name: str
-
+    avatar_image_url: Optional[str] = None  #
     class Config:
         orm_mode = True
 

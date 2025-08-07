@@ -9,7 +9,7 @@ from app.utils.generate_verification_token import generate_verification_token
 from app.utils.send_verification_mail import send_verification_email
 from jose import jwt,JWTError
 from app.schemas.admin import AdminVerificationIn
-
+from app.schemas.user import UserOut
 import os
 SECRET_KEY = os.getenv("JWT_SECRET")
 class UserService:
@@ -45,16 +45,16 @@ class UserService:
             print("Error creating user:", str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
-    def get_user_by_id(self, user_id: int) -> User:
-        try:
-            user = self.user_repository.get_by_id(user_id)
-            if not user:
-                raise HTTPException(status_code=404, detail="User not found")
-            return user
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))  
-        
-    
+    def get_user_by_id(self, user_id: int, university_id: int) -> UserOut:
+        users = self.user_repository.getPaginatedWithConditions(
+            conditions=(User.id == user_id, User.university_id == university_id),
+            limit=1,
+            offset=0,
+            order_by=None
+        )
+        user = users[0] if users else None
+        return UserOut(id=user.id, display_name=user.display_name, avatar_image_url=user.avatar_image_url)
+
     def verify_student(self, token: str, verification_info: StudentVerificationIn) -> User:
         try: 
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"] )
@@ -150,3 +150,19 @@ class UserService:
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         return user.email  
+    
+    def search_users(self, name: str, university_id: int, limit: int = 20, offset: int = 0) -> list[User]:
+        if not name:
+            raise HTTPException(status_code=400, detail="Name query parameter is required")
+        
+        users = self.user_repository.getPaginatedWithConditions(
+            conditions=(User.display_name.like(f"%{name}%"), User.university_id == university_id, User.verified == True),
+            limit=limit,
+            offset=offset,
+            order_by=User.display_name.asc()
+        )
+        return users
+    
+
+
+        

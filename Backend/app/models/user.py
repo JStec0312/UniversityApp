@@ -36,6 +36,8 @@ class User(BaseModel):
     display_name = Column(String(255), nullable=True)
     verified = Column(Boolean, default=False, nullable=False)
     university_id = Column(Integer, ForeignKey("universities.id"), nullable=False)
+    avatar_image_url = Column(String(255), nullable=True, default=None)  # URL to the user's avatar image
+    
 
     
     # Relationships

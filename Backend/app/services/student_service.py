@@ -42,7 +42,8 @@ class StudentService:
                 university_id= student.user.university_id,
                 faculty_id= student.faculty_id,
                 major_id= student.major_id,
-                display_name= student.user.display_name
+                display_name= student.user.display_name,
+                avatar_image_url= student.user.avatar_image_url,
             )
         )
     

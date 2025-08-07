@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import user_api, student_api, admin_api, superior_group_api, university_api, faculty_api, major_api, group_api, event_api, news_api
+from app.api import user_api, student_api, admin_api, superior_group_api, university_api, faculty_api, major_api, group_api, event_api, news_api, chat_api
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.db import Base, engine
 
@@ -20,6 +20,8 @@ app.add_middleware(
 # User, Student, and Admin API Routers
 app.include_router(user_api.router, prefix="/api/user", tags=["users"])
 app.include_router(student_api.router, prefix="/api/user", tags=["students"])
+app.include_router(chat_api.router, prefix="/api/user", tags=["chat"])
+app.include_router(chat_api.router, prefix="", tags=["chat-legacy"])  # For backward compatibility
 app.include_router(admin_api.router, prefix="/api/user", tags=["admins"])
 app.include_router(superior_group_api.router, prefix = "/api/user/superior-group", tags=["superior-groups"])
 app.include_router(university_api.router, prefix="/api/university", tags=["universities"])
