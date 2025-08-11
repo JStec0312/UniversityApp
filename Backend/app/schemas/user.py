@@ -19,3 +19,7 @@ class UserOut(BaseModel):
 class UserAuthIn(BaseModel):
     email: EmailStr
     password: str
+
+class EmailOut(BaseModel):
+    email: EmailStr
+

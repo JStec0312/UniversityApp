@@ -35,7 +35,7 @@ class GroupService:
         )
     
     def get_groups_by_university_id(self, university_id: int):
-        groups = self.group_repo.getPaginatedWithConditions(
+        groups = self.group_repo.get_paginated_with_conditions(
             conditions=(Group.university_id == university_id,),
             offset=0,
             limit=None

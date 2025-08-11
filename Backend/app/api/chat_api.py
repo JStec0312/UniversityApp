@@ -7,7 +7,6 @@ from typing import Dict, Set
 
 router = APIRouter()
 
-# Store active WebSocket connections
 class ConnectionManager:
     def __init__(self):
         # user_id -> set of websockets for that user
@@ -42,7 +41,6 @@ class ConnectionManager:
     async def send_dm(self, message: dict, from_user: int, to_user: int):
         # Send to both sender and receiver
         await self.send_personal_message(message, from_user)
-        await self.send_personal_message(message, to_user)
 
 manager = ConnectionManager()
 

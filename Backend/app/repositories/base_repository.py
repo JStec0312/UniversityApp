@@ -59,11 +59,15 @@ class BaseRepository(Generic[T]):
         Returns:
             The created record with updated fields (e.g., ID, created_at)
         """
-        self.db.add(obj)
-        self.db.commit()
-        self.db.refresh(obj)
-        return obj
-    
+        try:
+            self.db.add(obj)
+            self.db.commit()
+            self.db.refresh(obj)
+            return obj
+        except Exception as e:
+            self.db.rollback()
+            raise e
+
     def update_by_id(self, id: int, updates: Dict[str, Any]) -> Optional[T]:
         """
         Update an existing record by ID with the provided field updates.
@@ -155,7 +159,7 @@ class BaseRepository(Generic[T]):
         """
         return self.db.query(self.model).offset(skip).limit(limit).all()
     
-    def getPaginatedWithConditions(self, conditions:tuple, offset: int = 0, limit: int = 100, order_by: Optional[str] = None) -> List[T]:
+    def get_paginated_with_conditions(self, conditions:tuple, offset: int = 0, limit: int = 100, order_by: Optional[str] = None) -> List[T]:
         """
         Get paginated records with specific conditions.
         

@@ -80,7 +80,7 @@ def test_get_email(client, basic_seed):
         "password": "password"
     })
     assert response_login.status_code == 200
-    response = client.get("/api/user/getEmail")
+    response = client.get("/api/user/email")
     assert response.status_code == 200
     assert response.json() == "user@gmail.com"
 
@@ -91,3 +91,10 @@ def test_search_users(client, superior_admin_login_on_base_seed ):
     response = client.get("/api/user/search", params={"name": "Test User"})
     assert response.status_code == 200
     assert isinstance(response.json(), list)
+
+
+def test_get_user(client, superior_admin_login_on_base_seed):   
+    superior_admin_login_on_base_seed()
+    response = client.get("/api/user/1")
+    assert response.status_code == 200
+    assert response.json()["id"] == 1

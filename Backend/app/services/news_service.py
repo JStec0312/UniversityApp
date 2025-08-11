@@ -26,7 +26,7 @@ class NewsService:
     
 
     def get_news_by_university(self, university_id: int, limit: int = 10, offset: int = 0):
-        news =  self.news_repository.getPaginatedWithConditions(
+        news =  self.news_repository.get_paginated_with_conditions(
             conditions=[News.university_id == university_id],
             limit=limit,
             offset=offset,
@@ -38,7 +38,7 @@ class NewsService:
 
 
     def get_news_by_group(self, group_id: int, university_id: int, limit: int = 10, offset: int = 0):
-        return self.news_repository.getPaginatedWithConditions(
+        return self.news_repository.get_paginated_with_conditions(
             conditions=[News.group_id == group_id, university_id == News.university_id],
             limit=limit,
             offset=offset,
@@ -48,7 +48,7 @@ class NewsService:
 
 
     def get_news_by_id(self, news_id: int, university_id: int):
-        newsList = self.news_repository.getPaginatedWithConditions(
+        newsList = self.news_repository.get_paginated_with_conditions(
             conditions=[News.id == news_id, News.university_id == university_id]
         )
         if len(newsList) == 0:
