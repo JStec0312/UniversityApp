@@ -4,7 +4,7 @@ from app.core.db import get_db
 from app.repositories.repository_factory import RepositoryFactory
 from app.services.service_factory import ServiceFactory
 from app.schemas.news import NewsIn, NewsOut
-from app.utils.require_roles import require_roles
+from app.utils.security.require_roles import require_roles
 from app.utils.role_enum import RoleEnum
 
 router = APIRouter()

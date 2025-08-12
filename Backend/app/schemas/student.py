@@ -4,6 +4,7 @@ from typing import Optional
 
 
 class StudentVerificationIn(BaseModel):
+    token: str
     faculty_id: Optional[int] = None
     major_id: Optional[int] = None
 from pydantic import BaseModel

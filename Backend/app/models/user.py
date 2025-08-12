@@ -46,6 +46,6 @@ class User(BaseModel):
     admin = relationship("Admin", back_populates="user", uselist=False)  # Admin profile if user is an admin
     forum_posts = relationship("ForumPost", back_populates="user")  # Forum posts created by this user
     event_rsvps = relationship("EventRSVP", back_populates="user")  # Event RSVPs for this user
-    group_register_passwords = relationship("GroupRegisterPassword", back_populates="given_by_user")
+    superior_admin = relationship("SuperiorAdmin", back_populates="user")  
 
 

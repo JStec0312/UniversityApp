@@ -1,18 +1,15 @@
 from app.models.user import User
-from app.exceptions.service_errors import EmailAlreadyExistsException, ServerErrorException, UserAlreadyVerifiedException, UserNotFoundException
-from app.schemas.user import UserCreate
-from app.schemas.student import StudentVerificationIn
+from app.exceptions.service_errors import EmailAlreadyExistsException, InvalidCredentialsException, ServerErrorException, UserAlreadyVerifiedException, UserNotFoundException, UserNotVerifiedException
+from app.schemas.user import UserCreate, UserAuthIn
 from app.repositories.user_repository import UserRepository
-from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.exc import IntegrityError
 from passlib.hash import bcrypt
-from app.utils.generate_verification_token import generate_verification_token
-from app.utils.send_verification_mail import send_verification_email
-from jose import jwt,JWTError
-from app.schemas.admin import AdminVerificationIn
+from app.utils.security.jwt_tokens import create_verify_token
+from app.utils.role_enum import RoleEnum
 from app.schemas.user import UserOut
-from fastapi import HTTPException
 import os
 SECRET_KEY = os.getenv("JWT_SECRET")
+
 class UserService:
     def __init__(self, user_repository: UserRepository):
         self.user_repository: UserRepository = user_repository
@@ -46,11 +43,11 @@ class UserService:
         if user.verified:
             raise UserAlreadyVerifiedException("User already verified")
         
-        token = generate_verification_token(user_id)
+        token = create_verify_token(user_id)
         return token, user.email, user.display_name, user.university_id
 
     def issue_verification_token(self, user_id: int) -> str:
-        return  generate_verification_token(user_id)
+        return create_verify_token(user_id)
 
 
     
@@ -74,9 +71,13 @@ class UserService:
         return user
     
 
-    def search_users(self, name: str, university_id: int, limit: int = 20, offset: int = 0) -> list[User]:        
+    def search_users(self, name: str, university_id: int, limit: int = 20, offset: int = 0) -> list[User]:    
+        term = (name or "").strip()
         def _escape_like(term: str) -> str:
             return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+        safe = _escape_like(term)
+        pattern = f"%{safe}%"
 
         users = self.user_repository.get_paginated_with_conditions(
             conditions=(
@@ -91,81 +92,25 @@ class UserService:
         return users
     
 
-
-
-    def verify_student(self, token: str, verification_info: StudentVerificationIn) -> User:
-        try: 
-            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"] )
-            user_id = payload.get("sub")
-        except JWTError:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        
-        user = self.user_repository.get_by_id(user_id)
-
-        expected_university_id = self.user_repository.get_university_id_by_user_id(user_id)
-        from app.repositories.faculty_repository import FacultyRepository
-        facultyRepo = FacultyRepository(self.user_repository.db)        
-
-        if facultyRepo.get_by_id(verification_info.faculty_id).university_id != expected_university_id:
-            raise HTTPException(status_code=400, detail="Faculty does not belong to user's university")
-
+    def authenticate_user(self, user_in: UserAuthIn ) ->  tuple[User, list[str]]:
+        user = self.user_repository.get_by_email(user_in.email)
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        if user.verified:
-            raise HTTPException(status_code=400, detail="User already verified")
-        
-        try:
-            self.user_repository.create_student(
-                user_id=user.id,
-                faculty_id=verification_info.faculty_id,
-                major_id=verification_info.major_id
-            )
+            raise UserNotFoundException("User not found")
 
-            self.user_repository.verify_user(user_id)   
-            return user
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+        if not getattr(user, "verified", False):
+            raise UserNotVerifiedException("User not verified")
 
+        if not bcrypt.verify(user_in.password, user.hashed_password):
+            raise InvalidCredentialsException("Invalid credentials")
 
-    def verify_admin(self, token: str, verification_info: AdminVerificationIn) -> User:
-        try: 
-            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"] )
-            user_id = int(payload.get("sub"))  # Convert to int
-        except JWTError:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        except (ValueError, TypeError):
-            raise HTTPException(status_code=401, detail="Invalid token format")
-        
-        # First check if user exists
-        user = self.user_repository.get_by_id(user_id)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        if user.verified:
-            raise HTTPException(status_code=400, detail="User already verified")
-        
-        expected_university_id = self.user_repository.get_university_id_by_user_id(user_id)
-        from app.repositories.group_repository import GroupRepository
-        groupRepo = GroupRepository(self.user_repository.db)
-        group = groupRepo.get_by_id(verification_info.group_id)
-        if not group:
-            raise HTTPException(status_code=404, detail="Group not found")
-        if group.university_id != expected_university_id:
-            raise HTTPException(status_code=400, detail="Group does not belong to user's university")
+        roles: list[str] = []
+        if getattr(user, "admin", None):
+            roles.append(RoleEnum.ADMIN.value)
+        if getattr(user, "student", None):
+            roles.append(RoleEnum.STUDENT.value)
+        if getattr(user, "superior_admin", None):
+            roles.append(RoleEnum.SUPERIOR_ADMIN.value)
 
-        try:
-            self.user_repository.create_admin(
-                user_id=user_id,  # Already converted to int
-                group_id=verification_info.group_id,
-                group_password=verification_info.group_password
-            )
-            self.user_repository.verify_user(user_id)    # Already converted to int
-            return user
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
-        
+        return user, roles
+    
 
-
-
-
-
-        

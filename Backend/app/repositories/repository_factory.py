@@ -15,7 +15,6 @@ from app.repositories.user_repository import UserRepository
 from app.repositories.student_repository import StudentRepository
 from app.repositories.major_repository import MajorRepository
 from app.repositories.admin_repository import AdminRepository
-from app.repositories.group_register_password_repository import GroupRegisterPasswordRepository
 
 
 class RepositoryFactory:
@@ -117,14 +116,7 @@ class RepositoryFactory:
         """
         return MajorRepository(self.db)
     
-    def get_group_register_password_repository(self) -> GroupRegisterPasswordRepository:
-        """
-        Create and return a GroupRegisterPasswordRepository instance.
-        
-        Returns:
-            GroupRegisterPasswordRepository: Repository for group registration password-related database operations
-        """
-        return GroupRegisterPasswordRepository(self.db)
+    
     
     def get_group_repository(self) -> BaseRepository:
         """

@@ -15,3 +15,4 @@ class GroupRepository(BaseRepository[Group]):
         return self.db.query(self.model).filter(
             self.model.university_id == university_id
         ).all()
+

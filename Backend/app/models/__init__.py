@@ -12,6 +12,7 @@ from app.models.faculty import Faculty
 from app.models.major import Major
 from app.models.group import Group
 from app.models.superior_group import SuperiorGroup
+from app.models.superior_admins import SuperiorAdmin
 
 # This allows importing all models from the models package like:
 # from app.models import User, Student, etc.

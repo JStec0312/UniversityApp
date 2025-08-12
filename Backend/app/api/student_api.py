@@ -1,49 +1,46 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
+from jose import ExpiredSignatureError, JWTError
 from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.repositories.repository_factory import RepositoryFactory
-from app.utils.require_roles import require_roles
+from app.exceptions.service_errors import (
+    FacultyDoesNotBelongToUniversityException,
+    InvalidVerificationTokenException,
+    UserAlreadyVerifiedException,
+    MajorDoesNotBelongToFacultyException,
+    UserNotFoundException,
+    InvalidInputException,
+    InvalidCredentialsException,
+    UserNotVerifiedException
+)
+from app.utils.security.require_roles import require_roles
 from app.utils.role_enum import RoleEnum
 from app.services.service_factory import ServiceFactory
-from app.schemas.student import StudentVerificationIn, StudentAuthOut, StudentAuthIn, StudentMeOut
+from app.schemas.student import StudentOut, StudentVerificationIn, StudentAuthOut, StudentAuthIn, StudentMeOut
 from app.schemas.user import UserOut
 router = APIRouter()
 
-@router.post("/student/verify/{token}", response_model=UserOut)
-def verify_user(token: str, verification_info: StudentVerificationIn,  db: Session = Depends(get_db)):
-    user_repo = RepositoryFactory(db).get_user_repository()
-    user_service = ServiceFactory.get_user_service(user_repo)
-    return user_service.verify_student(token, verification_info)
 
-
-
-@router.post("/student/auth", response_model = StudentAuthOut)
-def authenticate_user(user_auth: StudentAuthIn, response: Response, db: Session = Depends(get_db)):
-    student_repo = RepositoryFactory(db).get_student_repository()
-    student_service = ServiceFactory.get_student_service(student_repo)
-    return student_service.authenticate_student(user_auth, response)
-
-
-@router.get("/student/me", response_model=StudentMeOut)
-def get_current_student(db: Session = Depends(get_db), user = Depends(require_roles([RoleEnum.STUDENT.value]))):
-    """
-    Get the current authenticated student.
-    
-    This endpoint retrieves the details of the currently authenticated student.
-    
-    Returns:
-        UserOut: The details of the authenticated student.
-    """
-    student_repo = RepositoryFactory(db).get_student_repository()
-    student_service = ServiceFactory.get_student_service(student_repo)
-    return student_service.get_current_student(user["user_id"])
-
-
-@router.post("/student/logout")
-def logout (response: Response, db: Session = Depends(get_db)):
-    """
-    Logout the current user by clearing the authentication cookie.
-    """
-    student_repo = RepositoryFactory(db).get_student_repository()
-    student_service = ServiceFactory.get_student_service(student_repo)
-    return student_service.logout(response)
+@router.post("/verify", response_model = UserOut)
+def verify_student(body: StudentVerificationIn, db: Session = Depends(get_db)):
+    rf = RepositoryFactory(db)
+    svc = ServiceFactory.get_student_service(
+        rf.get_student_repository(),
+        rf.get_faculty_repository(),
+        rf.get_major_repository()
+    )
+    try:
+        user = svc.verify_student(body.token, body.faculty_id, body.major_id)
+        return user
+    except InvalidVerificationTokenException:
+        raise HTTPException(401, "Invalid verification token")
+    except UserNotFoundException:
+        raise HTTPException(404, "User not found")
+    except UserAlreadyVerifiedException:
+        raise HTTPException(409, "User already verified")
+    except FacultyDoesNotBelongToUniversityException as e:
+        raise HTTPException(400, str(e))
+    except MajorDoesNotBelongToFacultyException as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(500, "Internal server error")

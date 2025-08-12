@@ -14,7 +14,13 @@ class UserOut(BaseModel):
     class Config:
         orm_mode = True
 
-
+class UserAuthOut(BaseModel):
+    id: int
+    display_name: str
+    roles: list[str]
+    university_id: int
+    avatar_image_url: Optional[str] = None
+    
 
 class UserAuthIn(BaseModel):
     email: EmailStr
@@ -22,4 +28,5 @@ class UserAuthIn(BaseModel):
 
 class EmailOut(BaseModel):
     email: EmailStr
+
 

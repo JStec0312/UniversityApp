@@ -33,3 +33,13 @@ class StudentRepository(BaseRepository[Student]):
             .filter(User.email == email)
             .first()
         )
+
+    def get_user_by_id(self, user_id: int) -> User | None:
+        return self.db.query(User).filter(User.id == user_id).first()
+    
+
+    def verify_user(self, user_id: int) -> None:
+        user = self.get_user_by_id(user_id)
+        if user:
+            user.verified = True
+            self.db.commit()

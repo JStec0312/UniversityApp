@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.models.user import User
 from app.repositories.base_repository import BaseRepository
 from app.utils.role_enum import RoleEnum
@@ -14,7 +14,10 @@ class UserRepository(BaseRepository[User]):
         super().__init__(db, User)
 
     def get_by_email(self, email: str) -> User | None:
-        return self.db.query(self.model).filter(self.model.email == email).first()
+        return (self.db.query(User)
+                .options(joinedload(User.student), joinedload(User.admin))
+                .filter(User.email == email)
+                .one_or_none())
     
     def get_by_username(self, username: str) -> List[User] | None:
         return self.db.query(self.model).filter(self.model.display_name == username).all()
@@ -43,33 +46,3 @@ class UserRepository(BaseRepository[User]):
         raise ValueError("User does not exist")
     
 
-    def create_admin(self, user_id: int,  group_id: int, group_password:str ) -> User: #@TODO BŁĄD TUTAJ
-        existing_user = self.get_by_id(user_id)
-        if not existing_user:
-            raise ValueError("User does not exist")
-        # Validating group password 
-        from app.repositories.group_register_password_repository import GroupRegisterPasswordRepository
-        from app.utils.timebox import Clock
-        group_password_repo = GroupRegisterPasswordRepository(self.db)
-        group_password_record = group_password_repo.get_by_token(group_password)
-        if not group_password_record:
-            raise ValueError("Group password does not exist")
-        if Clock.is_after(Clock.now(), Clock.to_pl(group_password_record.expires_at)):
-            raise ValueError("Group password has expired")
-        if group_password_record.group_id != group_id:
-            raise ValueError("Group password does not match the group ID")
-
-        admin_repo = AdminRepository(self.db)
-        admin = Admin(
-            user_id=user_id,
-            group_id=group_id,
-        )
-        new_admin = admin_repo.create(admin)
-        #group_password_repo.delete_by_id(group_password_record.id) @TODO Uncomment this line to delete the group password after creating admin
-        return new_admin
-        
-    def get_university_id_by_user_id(self, user_id: int) -> int | None:
-        user = self.get_by_id(user_id)
-        if user:
-            return user.university_id
-        return None

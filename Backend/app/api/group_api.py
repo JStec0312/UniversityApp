@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.db import get_db
-from app.utils.require_roles import require_roles
+from app.utils.security.require_roles import require_roles
 from app.utils.role_enum import RoleEnum
 from app.schemas.group import  GroupByUniOut
 from app.repositories.repository_factory import RepositoryFactory

@@ -1,10 +1,12 @@
-from app.schemas.student import StudentAuthIn, StudentAuthOut, StudentOut, StudentMeOut
-from app.repositories.student_repository import StudentRepository
-from fastapi import HTTPException, Response
-from fastapi.responses import JSONResponse
+from app.models.student import Student
+from app.schemas.student import StudentAuthIn, StudentAuthOut,  StudentVerificationIn
+from app.repositories.repository_factory import  StudentRepository, FacultyRepository, MajorRepository
+from sqlalchemy.exc import IntegrityError
 from passlib.hash import bcrypt
-from jose import jwt,JWTError
-from datetime import datetime, timedelta
+from jose import ExpiredSignatureError, jwt,JWTError
+from datetime import datetime, timedelta, timezone
+from app.exceptions.service_errors import UserNotVerifiedException,  FacultyDoesNotBelongToUniversityException, InvalidCredentialsException, InvalidVerificationTokenException, UserAlreadyVerifiedException, MajorDoesNotBelongToFacultyException, UserNotFoundException, InvalidInputException
+from app.models import User
 
 from app.utils.role_enum import RoleEnum
 
@@ -12,59 +14,57 @@ import os
 SECRET_KEY = os.getenv("JWT_SECRET")
 
 class StudentService:
-    def __init__(self, student_repo: StudentRepository ):
+    def __init__(self, student_repo: StudentRepository, faculty_repo: FacultyRepository = None, major_repo: MajorRepository = None):
         self.student_repo = student_repo
+        self.faculty_repo = faculty_repo
+        self.major_repo = major_repo
 
-    def authenticate_student(self, student_auth: StudentAuthIn, response: Response ) -> StudentAuthOut:
-        student = self.student_repo.get_by_email(student_auth.email)
-        
-        if not student or not bcrypt.verify(student_auth.password, student.user.hashed_password):
-            raise HTTPException(status_code=401, detail="Invalid email or password")
-        
-        if not student.user.verified:
-            raise HTTPException(status_code=403, detail="User not verified")
-        expires = datetime.now() + timedelta(hours=100)
-        student_access_token = jwt.encode({"sub": str(student.user.id), "role": RoleEnum.STUDENT.value, "exp": expires, "university_id": student.user.university_id }, SECRET_KEY, algorithm="HS256")
-        response.set_cookie(
-            key="access_token",
-            value=student_access_token,
-            httponly=True,
-            secure=False,              # ⚠️ tylko przez HTTPS – wyłącz na localhost jeśli trzeba
-            max_age=60 * 60,          # 1h
-            expires=expires.timestamp(),
-            path="/",
-            samesite="lax"
-        )
-        return StudentAuthOut(
-            student = StudentOut(
-                student_id = student.id,
-                user_id = student.user_id,
-                university_id= student.user.university_id,
-                faculty_id= student.faculty_id,
-                major_id= student.major_id,
-                display_name= student.user.display_name,
-                avatar_image_url= student.user.avatar_image_url,
-            )
-        )
     
-    def get_current_student(self, user_id: int):
-        student = self.student_repo.get_by_user_id(user_id)
-        if not student:
-            raise HTTPException(status_code=404, detail="Student not found")
+    def verify_student(self, token: str, faculty_id:int, major_id:int) -> User:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = int(payload["sub"])
+        except (ExpiredSignatureError, JWTError, KeyError, ValueError):
+            raise InvalidVerificationTokenException("Invalid verification token")
+
+        # 2) user
+        user = self.student_repo.get_user_by_id(user_id)
+        if not user:
+            raise UserNotFoundException("User not found")
+        if user.verified:
+            raise UserAlreadyVerifiedException("User already verified")
+
+        expected_university_id = user.university_id
+
+        major = self.major_repo.get_by_id(major_id) if major_id else None
+        if not major and major_id:
+            raise MajorDoesNotBelongToFacultyException("Major does not belong to the faculty")
+        if major_id and not faculty_id:
+            faculty_id = major.faculty_id
+
+        faculty = self.faculty_repo.get_by_id(faculty_id) if faculty_id else None
+
         
-        return StudentMeOut(
-            role = RoleEnum.STUDENT,
-            user_id = student.user_id,
-            email = student.user.email,
-            display_name = student.user.display_name,
-            faculty_id = student.faculty_id,
-            major_id = student.major_id,
-            university_id = student.user.university_id
-        )
+        if faculty and faculty.university_id != expected_university_id:
+            raise FacultyDoesNotBelongToUniversityException("Faculty does not belong to the university")
+        if major and major.faculty_id != faculty.id:
+            raise MajorDoesNotBelongToFacultyException("Major does not belong to the faculty")
+        
+        try:
+            self.student_repo.create(Student(
+                user_id=user.id,
+                faculty_id=faculty_id,   # może być None
+                major_id=major_id,       # może być None
+            ))
+            self.student_repo.verify_user(user.id)
+        except IntegrityError:
+            raise UserAlreadyVerifiedException("User already verified")
+
+        self.student_repo.db.refresh(user)
+        return user
+
+
+
+    
     
 
-
-    def logout(self, response: Response):
-        response = JSONResponse(content={"message": "Logged out successfully"}, status_code=200)
-        response.delete_cookie("access_token", path="/")
-        return response
