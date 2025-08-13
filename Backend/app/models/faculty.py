@@ -5,7 +5,7 @@ from app.models.base import BaseModel
 
 class Faculty(BaseModel):
     __tablename__ = "faculties"
-
+    
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False)
     university_id = Column(Integer, ForeignKey("universities.id"), nullable=False)

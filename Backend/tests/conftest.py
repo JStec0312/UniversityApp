@@ -8,16 +8,20 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.core.db import Base, get_db
+from tests.fixtures import *
+from tests.fixtures.auth_helpers import Auth
 
-# -- PRAGMA: enforce FK in SQLite (domyślnie OFF) --
 def _enable_sqlite_fk(dbapi_conn, _conn_record):
     cursor = dbapi_conn.cursor()
     cursor.execute("PRAGMA foreign_keys=ON;")
     cursor.close()
 
 @pytest.fixture(scope="function")
+def auth():
+    return Auth()
+
+@pytest.fixture(scope="function")
 def sqlite_db_path(tmp_path: Path):
-    # unikalna ścieżka per test
     return tmp_path / "test_db.sqlite3"
 
 @pytest.fixture(scope="function")
@@ -58,3 +62,5 @@ def client(db_session):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+

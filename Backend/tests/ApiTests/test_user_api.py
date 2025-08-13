@@ -1,24 +1,10 @@
-"""
-Test module for user API endpoints.
 
-This module contains tests for user creation, student verification, and admin verification.
-Each test uses its own isolated database.
-"""
-import os
-from sqlalchemy import create_engine
-from app.main import app
-from app.core.db import Base, get_db
-from tests.RepositoryTest import test_user
-
-
-
-
-def test_create_verify_and_login_as_user(client, user_seed):
-    user_seed = user_seed()
+def test_create_verify_and_login_as_user(client, sc_no_users):
+    scenario = sc_no_users
     user_data = {
         "email":"test@gmail.com",
         "password" : "testpassword",
-        "university_id": 1,
+        "university_id": scenario["university"].id,
         "display_name" : "test_user",        
     }
     #register
@@ -47,16 +33,14 @@ def test_create_verify_and_login_as_user(client, user_seed):
     assert login_response.status_code == 200
     
 
-def test_get_email(client, basic_seed):
-    basic_seed = basic_seed()
-    response_login = client.post("/api/user/student/auth", json={
-        "email": "user@gmail.com",
-        "password": "password"
-    })
-    assert response_login.status_code == 200
+def test_get_email(client, sc_with_verified_user_student, auth):
+    scenario = sc_with_verified_user_student
+    user, password = scenario["user"]
+    client =  auth.login_via_endpoint(client, email=user.email, password=password)
+    assert client.cookies.get("access_token") is not None
     response = client.get("/api/user/email")
     assert response.status_code == 200
-    assert response.json() == {'email': 'user@gmail.com'}
+    assert response.json() == {'email': user.email}
 
 
 

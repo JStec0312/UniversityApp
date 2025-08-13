@@ -1,53 +1,42 @@
 from fastapi import HTTPException
 from app.models.group import Group
-from app.schemas.group import GroupCreateIn, GroupCreateOut, GroupByUniOut
-from app.repositories.repository_factory import RepositoryFactory
+from app.schemas.group import GroupCreateIn,  GroupByUniOut
+from app.exceptions.service_errors import GroupAlreadyExistsException, GroupHasDependenciesException, GroupNotFoundException
+from sqlalchemy.exc import IntegrityError
 from app.repositories.group_repository import GroupRepository
 class GroupService:
     def __init__(self, group_repo):
         self.group_repo : GroupRepository = group_repo
 
-    def create_group(self, data: GroupCreateIn, given_by):
-        user_id = given_by
-        user_repo = RepositoryFactory(self.group_repo.db).get_user_repository()
-        university_id = user_repo.get_university_id_by_user_id(user_id)
-        if not university_id:
-            raise HTTPException(status_code=404, detail="University not found for the user")
-        
-        existing_group = self.group_repo.get_by_name(data.group_name, university_id)
-        if existing_group:
-            raise HTTPException(status_code=400, detail="Group with this name already exists in the university")
-        
-        group = self.group_repo.create(
-            Group(
-                group_name=data.group_name,
-                university_id=university_id,
-            )
-        )
-
-        if not group:
-            raise HTTPException(status_code=500, detail="Failed to create group")
-        
-        return GroupCreateOut(
-            group_id=group.id,
-            group_name=group.group_name,
-            university_id=group.university_id
-        )
+    def create_group(self, data: GroupCreateIn, university_id:int):
     
-    def get_groups_by_university_id(self, university_id: int):
+        try:
+            return  self.group_repo.create(Group(
+                group_name=data.group_name,
+                university_id=university_id
+            ))
+        except IntegrityError as e:
+            raise GroupAlreadyExistsException("Group with this name already exists")
+        
+
+
+    def get_groups_by_university_id(self, university_id: int, limit: int, offset: int):
         groups = self.group_repo.get_paginated_with_conditions(
             conditions=(Group.university_id == university_id,),
-            offset=0,
-            limit=None
+            offset=offset,
+            limit=limit
         )
         if not groups:
-            raise HTTPException(status_code=404, detail="No groups found for this university")
+            raise GroupNotFoundException("No groups found for this university")
         
-        return [
-            GroupByUniOut(
-                group_id=group.id,
-                group_name=group.group_name,
-                university_id=group.university_id
-            )
-            for group in groups]
-        
+        return groups
+    
+
+    def delete_group(self, group_id: int, university_id: int):
+        group = self.group_repo.get_by_id(group_id)
+        if not group or group.university_id != university_id:
+            raise GroupNotFoundException("Group not found or does not belong to this university")
+        try:
+            self.group_repo.delete_by_id(group_id)
+        except IntegrityError as e:
+            raise GroupHasDependenciesException("Group has dependencies and cannot be deleted")

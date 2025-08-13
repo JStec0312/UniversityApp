@@ -131,7 +131,7 @@ def login(user_in: UserAuthIn, response: Response, db: Session = Depends(get_db)
         samesite=SAMESITE,      # prod (inne domeny): "none"
         path="/",
         max_age=TTL,
-        domain=COOKIE_DOMAIN,   # zwykle None
+        domain=None,   # zwykle None
     )
 
     return UserAuthOut(

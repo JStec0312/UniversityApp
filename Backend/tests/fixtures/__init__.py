@@ -11,8 +11,4 @@ This package contains organized fixtures for different domains:
 All fixtures are designed to be reusable and composable.
 """
 
-from .base_fixtures import *
-from .admin_fixtures import *
-from .student_fixtures import *
-from .event_fixtures import *
-from .auth_fixtures import *
+from .fixtures import *

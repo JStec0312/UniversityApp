@@ -55,3 +55,10 @@ class FacultyDoesNotBelongToUniversityException(Exception):
 
 class MajorDoesNotBelongToFacultyException(Exception):
     pass    
+
+class GroupAlreadyExistsException(Exception):
+    pass
+
+
+class GroupHasDependenciesException(Exception):
+    pass
