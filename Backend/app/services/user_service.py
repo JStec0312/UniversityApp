@@ -1,5 +1,5 @@
 from app.models.user import User
-from app.exceptions.service_errors import EmailAlreadyExistsException, InvalidCredentialsException, ServerErrorException, UserAlreadyVerifiedException, UserNotFoundException, UserNotVerifiedException
+from app.core.service_errors import EmailAlreadyExistsException, InvalidCredentialsException, ServerErrorException, UserAlreadyVerifiedException, UserNotFoundException, UserNotVerifiedException
 from app.schemas.user import UserCreate, UserAuthIn
 from app.repositories.user_repository import UserRepository
 from sqlalchemy.exc import IntegrityError

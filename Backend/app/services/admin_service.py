@@ -1,4 +1,4 @@
-from app.exceptions.service_errors import UserNotFoundException, UserAlreadyVerifiedException, InvalidVerificationTokenException, GroupNotFoundException, GroupNotBelongToUniversityException, InvalidGroupPasswordException
+from app.core.service_errors import UserNotFoundException, UserAlreadyVerifiedException, InvalidVerificationTokenException, GroupNotFoundException, GroupNotBelongToUniversityException, InvalidGroupPasswordException
 from app.schemas.admin import AdminAuthIn, AdminAuthOut, AdminOut, AdminMeOut, AdminVerificationIn
 from app.repositories.admin_repository import AdminRepository
 from app.models.user import User

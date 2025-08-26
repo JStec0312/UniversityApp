@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from passlib.hash import bcrypt
 from jose import ExpiredSignatureError, jwt,JWTError
 from datetime import datetime, timedelta, timezone
-from app.exceptions.service_errors import UserNotVerifiedException,  FacultyDoesNotBelongToUniversityException, InvalidCredentialsException, InvalidVerificationTokenException, UserAlreadyVerifiedException, MajorDoesNotBelongToFacultyException, UserNotFoundException, InvalidInputException
+from app.core.service_errors import UserNotVerifiedException,  FacultyDoesNotBelongToUniversityException, InvalidCredentialsException, InvalidVerificationTokenException, UserAlreadyVerifiedException, MajorDoesNotBelongToFacultyException, UserNotFoundException, InvalidInputException
 from app.models import User
 
 from app.utils.role_enum import RoleEnum

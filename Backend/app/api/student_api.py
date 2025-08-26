@@ -3,7 +3,7 @@ from jose import ExpiredSignatureError, JWTError
 from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.repositories.repository_factory import RepositoryFactory
-from app.exceptions.service_errors import (
+from app.core.service_errors import (
     FacultyDoesNotBelongToUniversityException,
     InvalidVerificationTokenException,
     UserAlreadyVerifiedException,
@@ -29,18 +29,6 @@ def verify_student(body: StudentVerificationIn, db: Session = Depends(get_db)):
         rf.get_faculty_repository(),
         rf.get_major_repository()
     )
-    try:
-        user = svc.verify_student(body.token, body.faculty_id, body.major_id)
-        return user
-    except InvalidVerificationTokenException:
-        raise HTTPException(401, "Invalid verification token")
-    except UserNotFoundException:
-        raise HTTPException(404, "User not found")
-    except UserAlreadyVerifiedException:
-        raise HTTPException(409, "User already verified")
-    except FacultyDoesNotBelongToUniversityException as e:
-        raise HTTPException(400, str(e))
-    except MajorDoesNotBelongToFacultyException as e:
-        raise HTTPException(400, str(e))
-    except Exception as e:
-        raise HTTPException(500, "Internal server error")
+    user = svc.verify_student(body.token, body.faculty_id, body.major_id)
+    return user
+   

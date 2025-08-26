@@ -2,7 +2,7 @@
 from urllib import response
 from fastapi import APIRouter, Depends, Query, HTTPException, BackgroundTasks, Response, Request
 from sqlalchemy.orm import Session
-from app.exceptions.service_errors import EmailAlreadyExistsException, ServerErrorException, UserAlreadyVerifiedException, UserNotFoundException, UserNotVerifiedException, InvalidCredentialsException
+from app.core.service_errors import EmailAlreadyExistsException, ServerErrorException, UserAlreadyVerifiedException, UserNotFoundException, UserNotVerifiedException, InvalidCredentialsException
 from app.core.db import get_db
 from app.schemas.student import StudentVerificationIn
 from app.schemas.user import UserCreate, UserOut, EmailOut, UserAuthIn, UserAuthOut

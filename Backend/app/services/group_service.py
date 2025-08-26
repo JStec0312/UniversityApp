@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from app.models.group import Group
 from app.schemas.group import GroupCreateIn,  GroupByUniOut
-from app.exceptions.service_errors import GroupAlreadyExistsException, GroupHasDependenciesException, GroupNotFoundException
+from app.core.service_errors import GroupAlreadyExistsException, GroupHasDependenciesException, GroupNotFoundException
 from sqlalchemy.exc import IntegrityError
 from app.repositories.group_repository import GroupRepository
 class GroupService:

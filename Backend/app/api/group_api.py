@@ -5,7 +5,7 @@ from app.repositories.repository_factory import RepositoryFactory
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.db import get_db
-from app.exceptions.service_errors import GroupAlreadyExistsException, GroupHasDependenciesException, GroupNotFoundException
+from app.core.service_errors import GroupAlreadyExistsException, GroupHasDependenciesException, GroupNotFoundException
 from app.repositories.repository_factory import RepositoryFactory
 from app.services.service_factory import ServiceFactory
 from app.utils.security.require import require
@@ -34,25 +34,16 @@ def get_groups_by_university_id(
 def create_group(data: GroupCreateIn, db:Session = Depends(get_db), user = require.superior):
     group_repo = RepositoryFactory(db).get_group_repository()
     group_service = ServiceFactory.get_group_service(group_repo)
-    try:
-        group = group_service.create_group(data = data, university_id = user["university_id"])
-        return GroupCreateOut(
-            group_id=group.id,
-            group_name=group.name,
-            university_id=user["university_id"]
-        )
-    except GroupAlreadyExistsException as e:
-        raise HTTPException(status_code=409, detail=str(e))
-
+    group = group_service.create_group(data = data, university_id = user["university_id"])
+    return GroupCreateOut(
+        group_id=group.id,
+        group_name=group.name,
+        university_id=user["university_id"]
+    )
 
 
 @router.delete("/{group_id}", status_code=204)
 def delete_group(group_id: int, db: Session = Depends(get_db), user = require.superior):
     group_repo = RepositoryFactory(db).get_group_repository()
     group_service = ServiceFactory.get_group_service(group_repo)
-    try:
-        group_service.delete_group(group_id=group_id, university_id=user["university_id"])
-    except GroupNotFoundException as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except GroupHasDependenciesException as e:
-        raise HTTPException(status_code=409, detail=str(e))
+    group_service.delete_group(group_id=group_id, university_id=user["university_id"])
