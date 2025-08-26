@@ -11,6 +11,7 @@ class UserOut(BaseModel):
     id: int
     display_name: str
     avatar_image_url: Optional[str] = None  #
+    total: int = 1
     class Config:
         orm_mode = True
 

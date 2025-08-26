@@ -1,4 +1,7 @@
 
+from app.models.user import User
+
+
 def test_create_verify_and_login_as_user(client, sc_no_users):
     scenario = sc_no_users
     user_data = {
@@ -44,16 +47,25 @@ def test_get_email(client, sc_with_verified_user_student, auth):
 
 
 
-def test_search_users(client, superior_admin_login_on_base_seed ):
-    superior_admin_login_on_base_seed()
+def test_search_users(client,  sc_with_verified_user_student , auth):
+    scenario = sc_with_verified_user_student
+    user, password = scenario["user"]
+    client =  auth.login_via_endpoint(client, email=user.email, password=password)
+
     response = client.get("/api/user/search", params={"name": "Test User"})
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
 
-def test_get_user(client, superior_admin_login_on_base_seed):   
-    superior_admin_login_on_base_seed()
+def test_get_user(client, sc_with_verified_user_student, auth):   
+    scenario = sc_with_verified_user_student
+    user, password = scenario["user"]
+    client =  auth.login_via_endpoint(client, email=user.email, password=password)
+
     response = client.get("/api/user/1")
     assert response.status_code == 200
-    assert response.json()["id"] == 1
+    assert response.json()["id"] == user.id
+    assert response.json()["display_name"] == user.display_name
+    
+    
 

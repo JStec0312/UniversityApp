@@ -6,6 +6,7 @@ common CRUD operations and query patterns for all entity repositories.
 """
 
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import Generic, Iterable, TypeVar, List, Optional, Dict, Any
 
 T = TypeVar('T')
@@ -146,18 +147,6 @@ class BaseRepository(Generic[T]):
             query = query.filter(getattr(self.model, key) == value)
         return query.all()
     
-    def getPaginated(self, skip: int = 0, limit: int = 100) -> List[T]:
-        """
-        Get paginated records.
-        
-        Args:
-            skip: Number of records to skip (for pagination)
-            limit: Maximum number of records to return
-            
-        Returns:
-            List of records based on pagination parameters
-        """
-        return self.db.query(self.model).offset(skip).limit(limit).all()
     
 
     def get_paginated_with_conditions(
@@ -171,3 +160,9 @@ class BaseRepository(Generic[T]):
         if order_by:
             query = query.order_by(*order_by)      
         return query.offset(offset).limit(limit).all()
+
+    def count_with_conditions(self, conditions: Iterable[Any] = ()) -> int:
+        return  self.db.query(func.count(self.model.id)).filter(*conditions).scalar()
+
+    def get_first_with_conditions(self, conditions: Iterable[Any] = ()) -> Optional[T]:
+        return self.db.query(self.model).filter(*conditions).first()

@@ -1,4 +1,6 @@
+from sqlalchemy import func
 from app.models.user import User
+import re
 from app.core.service_errors import EmailAlreadyExistsException, InvalidCredentialsException, ServerErrorException, UserAlreadyVerifiedException, UserNotFoundException, UserNotVerifiedException
 from app.schemas.user import UserCreate, UserAuthIn
 from app.repositories.user_repository import UserRepository
@@ -59,37 +61,51 @@ class UserService:
     
 
     def get_user_by_id(self, user_id: int, university_id: int) -> UserOut:
-        users = self.user_repository.get_paginated_with_conditions(
-            conditions=(User.id == user_id, User.university_id == university_id),
-            limit=1,
-            offset=0,
-            order_by=None
+        user = self.user_repository.get_first_with_conditions(
+            conditions=(User.id == user_id, User.university_id == university_id)
         )
-        user = users[0] 
-        if not user:
+        if user is None:
             raise UserNotFoundException("User not found")
         return user
     
+    @staticmethod
+    def _normalize(term: str) -> str:
+        term = (term or "").strip()
+        return re.sub(r"\s+", " ", term)
 
-    def search_users(self, name: str, university_id: int, limit: int = 20, offset: int = 0) -> list[User]:    
-        term = (name or "").strip()
-        def _escape_like(term: str) -> str:
-            return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    @staticmethod
+    def _escape_like(term: str) -> str:
+        return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
-        safe = _escape_like(term)
-        pattern = f"%{safe}%"
+    def search_users(
+        self,
+        name: str,
+        university_id: int,
+        limit: int = 20,
+        offset: int = 0
+    ) -> tuple[list[User], int]:                    
+        term = self._normalize(name)
+        safe = self._escape_like(term)
 
-        users = self.user_repository.get_paginated_with_conditions(
-            conditions=(
-                User.university_id == university_id,
-                User.verified.is_(True),
-                User.display_name.ilike(pattern, escape="\\"),
-            ),
-            order_by=(User.display_name.asc(), User.id.asc()),
+        # multiword: "jan no" -> "%jan%no%"
+        parts = [p for p in safe.split(" ") if p]
+        like = f"%{'%'.join(parts)}%"
+
+        conditions = (
+            User.university_id == university_id,
+            User.verified.is_(True),
+            User.display_name.ilike(like, escape="\\"),
+        )
+
+        items = self.user_repository.get_paginated_with_conditions(
+            conditions=conditions,
             limit=limit,
             offset=offset,
+            order_by=(User.display_name.asc(), User.id.asc()),  # stabilna paginacja
         )
-        return users
+
+        total = self.user_repository.count_with_conditions(conditions)
+        return items, total
     
 
     def authenticate_user(self, user_in: UserAuthIn ) ->  tuple[User, list[str]]:

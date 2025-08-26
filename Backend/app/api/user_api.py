@@ -2,7 +2,6 @@
 from urllib import response
 from fastapi import APIRouter, Depends, Query, HTTPException, BackgroundTasks, Response, Request
 from sqlalchemy.orm import Session
-from app.core.service_errors import EmailAlreadyExistsException, ServerErrorException, UserAlreadyVerifiedException, UserNotFoundException, UserNotVerifiedException, InvalidCredentialsException
 from app.core.db import get_db
 from app.schemas.student import StudentVerificationIn
 from app.schemas.user import UserCreate, UserOut, EmailOut, UserAuthIn, UserAuthOut
@@ -24,12 +23,8 @@ TTL = int(os.getenv("ACCESS_TTL", "3600"))
 def create_user(user_in: UserCreate, response: Response, request: Request, background: BackgroundTasks,  db: Session = Depends(get_db)):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
-    try:
-        new_user = user_service.create_user(user_in)
-    except EmailAlreadyExistsException as e:
-        raise HTTPException(status_code=409, detail=str(e))
-    except ServerErrorException as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    new_user = user_service.create_user(user_in)
+    
     
     token = user_service.issue_verification_token(new_user.id)
     background.add_task(
@@ -47,13 +42,7 @@ def create_user(user_in: UserCreate, response: Response, request: Request, backg
 def resend_verification_token(user_id: int, background: BackgroundTasks, request:Request, db: Session = Depends(get_db)):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
-    try:
-        token, to_email, to_user, user_university_id = user_service.prepare_verification_token(user_id)
-    except UserNotFoundException as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except UserAlreadyVerifiedException as e:
-        raise HTTPException(status_code=409, detail=str(e))
-    
+    token, to_email, to_user, user_university_id = user_service.prepare_verification_token(user_id)
     background.add_task(
         send_verification_email,
         to_email=to_email,
@@ -67,12 +56,8 @@ def resend_verification_token(user_id: int, background: BackgroundTasks, request
 def get_user_email(db: Session = Depends(get_db), user = require.all):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
-    try:
-        email = user_service.get_user_email(user["user_id"])
-        return EmailOut(email=email)
-    except UserNotFoundException as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    
+    email = user_service.get_user_email(user["user_id"])
+    return EmailOut(email=email)
 
 @router.get("/search", response_model=list[UserOut])
 def search_users (
@@ -80,21 +65,24 @@ def search_users (
     user: dict = require.all,
     name: str = Query(..., min_length=1, max_length=100),
     limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0)
+    offset: int = Query(0, ge=0),
+    response: Response = None
 ):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
-    return user_service.search_users(name=name, university_id=user["university_id"], limit=limit, offset=offset)
+
+    users, total = user_service.search_users(name=name, university_id=user["university_id"], limit=limit, offset=offset)
+    response.headers["X-Total-Count"] = str(total)
+
+    return users
 
 @router.get("/{user_id}", response_model=UserOut)
 def get_user(user_id: int, user = require.all, db: Session = Depends(get_db)):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
-    try:
-        user = user_service.get_user_by_id(user_id=user_id, university_id=user["university_id"])
-    except UserNotFoundException as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    return UserOut(id=user.id, display_name=user.display_name, avatar_image_url=user.avatar_image_url)
+    entity = user_service.get_user_by_id(user_id=user_id, university_id=user["university_id"])
+
+    return entity
 
 
 @router.post("/logout")
@@ -107,14 +95,8 @@ def logout(response: Response):
 def login(user_in: UserAuthIn, response: Response, db: Session = Depends(get_db)):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
-    try:
-        user, roles = user_service.authenticate_user(user_in)
-    except UserNotFoundException as e:
-        raise HTTPException(status_code=401, detail=str(e))
-    except UserNotVerifiedException as e:
-        raise HTTPException(status_code=403, detail=str(e))
-    except InvalidCredentialsException as e:
-        raise HTTPException(status_code=401, detail=str(e))
+    user, roles = user_service.authenticate_user(user_in)
+   
     
     token = create_access_token(
         user_id=user.id,
