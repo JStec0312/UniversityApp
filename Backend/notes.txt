@@ -1,0 +1,20 @@
+ruff check . --fix
+Uruchamia lintowanie całego projektu i automatycznie naprawia to, co się da (np. usuwa nieużywane importy/zmienne, porządkuje importy, prostsze refaktory typu == None ➜ is None, itp.).
+• Modyfikuje pliki.
+• Zakończy się błędem (exit≠0), jeśli po fixie zostały problemy, których nie da się naprawić automatycznie.
+
+ruff format .
+Formater (jak Black) – ujednolica wygląd kodu: wcięcia, łamanie linii, cudzysłowy, spacje.
+• Modyfikuje pliki.
+• Zasady bierze z pyproject.toml (np. line-length, quote-style).
+
+mypy .
+Statyczny checker typów – sprawdza adnotacje i wyłapuje niespójności (złe typy argumentów/zwrotów, brak gałęzi return, użycie None tam, gdzie nie wolno, itp.).
+• Nie zmienia plików, tylko raportuje błędy.
+• Konfiguracja z pyproject.toml ([tool.mypy]) i np. plugin pydantic.mypy.
+
+Kolejność i tipy
+
+ruff check . --fix → 2) ruff format . → 3) mypy .
+Tak jest spoko: najpierw auto-poprawki linta, potem format, na końcu typy.
+Do CI:

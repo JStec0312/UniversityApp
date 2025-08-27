@@ -1,15 +1,12 @@
 # app/api/user_api.py
-from urllib import response
-from fastapi import APIRouter, Depends, Query, HTTPException, BackgroundTasks, Response, Request
+from fastapi import APIRouter, Depends, Query,  BackgroundTasks, Response, Request
 from sqlalchemy.orm import Session
 from app.core.db import get_db
-from app.schemas.student import StudentVerificationIn
 from app.schemas.user import UserCreate, UserOut, EmailOut, UserAuthIn, UserAuthOut
 from app.repositories.repository_factory import RepositoryFactory
 from app.services.service_factory import ServiceFactory
 from app.utils.security.require import require
 from app.utils.send_verification_mail import send_verification_email
-from app.utils.role_enum import RoleEnum
 from app.utils.security.jwt_tokens import create_access_token
 import os
 router = APIRouter()
@@ -109,11 +106,11 @@ def login(user_in: UserAuthIn, response: Response, db: Session = Depends(get_db)
         key="access_token",
         value=token,
         httponly=True,
-        secure=SECURE,          # prod: True
-        samesite=SAMESITE,      # prod (inne domeny): "none"
+        secure=SECURE,          
+        samesite=SAMESITE,      
         path="/",
         max_age=TTL,
-        domain=None,   # zwykle None
+        domain=None,   
     )
 
     return UserAuthOut(
