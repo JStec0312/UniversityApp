@@ -18,19 +18,20 @@ class GroupRepository(BaseRepository[Group]):
             self.model.university_id == university_id
         ).all()
 
-def delete_by_id_and_university(self, group_id: int, university_id: int) -> int:
-    try:
-        stmt = delete(self.model).where(
-            self.model.id == group_id,
-            self.model.university_id == university_id,
+    def delete_by_id_and_university(self, group_id: int, university_id: int) -> int:
+        stmt = (
+            delete(self.model)
+            .where(self.model.id == group_id, self.model.university_id == university_id)
+            .returning(self.model.id)
         )
-        result = self.db.execute(stmt)
-        self.db.commit()
-        # ile rekordow faktycznie usunieto (0 lub 1)
-        return result.rowcount or 0
-    except IntegrityError:
-        self.db.rollback()
-        raise
-    except Exception:
-        self.db.rollback()
-        raise
+        try:
+            result = self.db.execute(stmt)
+            self.db.commit()  # jeśli taki masz kontrakt; inaczej przenieś commit wyżej
+            deleted_id = result.scalar_one_or_none()
+            return 1 if deleted_id is not None else 0
+        except IntegrityError:
+            self.db.rollback()
+            raise
+        except Exception:
+            self.db.rollback()
+            raise

@@ -47,8 +47,8 @@ def make_admin(session, group, user):
     session.flush()
     return admin
 
-def make_superior_admin(session, university, user):
-    superior_admin = SuperiorAdmin(university_id=university.id, user_id=user.id)
+def make_superior_admin(session, user, group):
+    superior_admin = SuperiorAdmin(user_id=user.id, group_id=group.id)
     session.add(superior_admin)
     session.flush()
     return superior_admin

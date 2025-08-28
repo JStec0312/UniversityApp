@@ -32,11 +32,15 @@ class GroupService:
         return groups
     
 
-    def delete_group(self, group_id: int, university_id: int):
-        group = self.group_repo.get_by_id(group_id)
-        if not group or group.university_id != university_id:
-            raise GroupNotFoundException("Group not found or does not belong to this university")
+    def delete_group(self, group_id: int, university_id: int) -> None:
         try:
-            self.group_repo.delete_by_id(group_id)
-        except IntegrityError as e:
-            raise GroupHasDependenciesException("Group has dependencies and cannot be deleted")
+            deleted_count = self.group_repo.delete_by_id_and_university(group_id, university_id)
+        except IntegrityError as err:
+            raise GroupHasDependenciesException(
+                "Group has dependencies and cannot be deleted"
+            ) from err  # B904: zachowaj przyczynę
+
+        if deleted_count == 0:
+            raise GroupNotFoundException(
+                "Group not found or does not belong to the specified university"
+            )

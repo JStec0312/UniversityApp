@@ -8,8 +8,10 @@ from app.services.service_factory import ServiceFactory
 from app.utils.security.require import require
 from app.utils.send_verification_mail import send_verification_email
 from app.utils.security.jwt_tokens import create_access_token
+from typing import Annotated
 import os
 router = APIRouter()
+DBSession = Annotated[Session, Depends(get_db)]
 
 SECURE = os.getenv("SECURE_COOKIES", "false").lower() == "true"   # dev: False, prod: True
 SAMESITE = os.getenv("COOKIE_SAMESITE", "lax")                    # prod (inne domeny): "none"
@@ -17,7 +19,7 @@ COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")                        # zwykle None
 TTL = int(os.getenv("ACCESS_TTL", "3600"))
 
 @router.post("/", response_model=UserOut, status_code=201)
-def create_user(user_in: UserCreate, response: Response, request: Request, background: BackgroundTasks,  db: Session = Depends(get_db)):
+def create_user(user_in: UserCreate, response: Response, request: Request, background: BackgroundTasks,  db: DBSession):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
     new_user = user_service.create_user(user_in)
@@ -36,7 +38,7 @@ def create_user(user_in: UserCreate, response: Response, request: Request, backg
 
 
 @router.post("/token/{user_id}")
-def resend_verification_token(user_id: int, background: BackgroundTasks, request:Request, db: Session = Depends(get_db)):
+def resend_verification_token(user_id: int, background: BackgroundTasks, request:Request, db: DBSession):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
     token, to_email, to_user, user_university_id = user_service.prepare_verification_token(user_id)
@@ -50,7 +52,7 @@ def resend_verification_token(user_id: int, background: BackgroundTasks, request
     return {"status": "queued"}
 
 @router.get("/email", response_model=EmailOut, status_code=200)
-def get_user_email(db: Session = Depends(get_db), user = require.all):
+def get_user_email(db: DBSession, user = require.all):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
     email = user_service.get_user_email(user["user_id"])
@@ -58,7 +60,7 @@ def get_user_email(db: Session = Depends(get_db), user = require.all):
 
 @router.get("/search", response_model=list[UserOut])
 def search_users (
-    db: Session = Depends(get_db),
+    db: DBSession,
     user: dict = require.all,
     name: str = Query(..., min_length=1, max_length=100),
     limit: int = Query(20, ge=1, le=100),
@@ -74,7 +76,7 @@ def search_users (
     return users
 
 @router.get("/{user_id}", response_model=UserOut)
-def get_user(user_id: int, user = require.all, db: Session = Depends(get_db)):
+def get_user(db: DBSession, user_id: int, user = require.all):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
     entity = user_service.get_user_by_id(user_id=user_id, university_id=user["university_id"])
@@ -89,7 +91,7 @@ def logout(response: Response):
 
 
 @router.post("/login", response_model=UserAuthOut)
-def login(user_in: UserAuthIn, response: Response, db: Session = Depends(get_db)):
+def login(user_in: UserAuthIn, response: Response, db: DBSession):
     user_repo = RepositoryFactory(db).get_user_repository()
     user_service = ServiceFactory.get_user_service(user_repo)
     user, roles = user_service.authenticate_user(user_in)

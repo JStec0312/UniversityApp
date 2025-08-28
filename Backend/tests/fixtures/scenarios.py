@@ -1,9 +1,9 @@
 from tests.fixtures.factories import *
 
-def _university_faculty_major(session):
-    university = make_university(session, "Test University")
-    faculty = make_faculty(session, university, "Test Faculty")
-    major = make_major(session, faculty, "Test Major")
+def _university_faculty_major(session, university_name = "Test University", faculty_name = "Test Faculty", major_name = "Test Major"):
+    university = make_university(session, university_name)
+    faculty = make_faculty(session, university, faculty_name)
+    major = make_major(session, faculty, major_name)
     return university, faculty, major
 
 
@@ -16,6 +16,30 @@ def scenario_no_users(session):
         "faculty": faculty,
         "major": major,
         "group": group,
+    }
+
+def scenario_with_multiple_groups(session):
+    university, faculty, major = _university_faculty_major(session)
+    group1 = make_group(session, university, "Test Group 1")
+    group2 = make_group(session, university, "Test Group 2")
+    group3 = make_group(session, university, "Test Group 3")
+    university2, faculty2, major2 =   _university_faculty_major(session, "Test University 2", "Test Faculty 2", "Test Major 2")
+    group4 = make_group(session, university2, "Test Group 4")
+
+    user, password = make_user(session, email="superior@example.com", password="password", display_name="Superior User", university=university)
+    superior_admin = make_superior_admin(session, university, user)
+
+    return {
+        "university1": university,
+        "faculty1": faculty,
+        "major1": major,
+        "university2": university2,
+        "faculty2": faculty2,
+        "major2": major2,
+        "groups_from_university1": [group1, group2, group3],
+        "groups_from_university2": [group4],
+        "user" : (user, password),
+        "superior_admin": superior_admin
     }
 
 def scenario_with_non_verified_user(session):

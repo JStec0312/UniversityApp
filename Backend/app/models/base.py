@@ -6,7 +6,7 @@ for all database models in the application, providing common fields and behavior
 """
 
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy import Column, Integer, DateTime, text
+from sqlalchemy import Column, Integer, DateTime
 from sqlalchemy.sql import func
 from app.core.db import Base
 
