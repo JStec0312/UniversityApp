@@ -26,12 +26,9 @@ class GroupRepository(BaseRepository[Group]):
         )
         try:
             result = self.db.execute(stmt)
-            self.db.commit()  # jeśli taki masz kontrakt; inaczej przenieś commit wyżej
-            deleted_id = result.scalar_one_or_none()
+            deleted_id = result.scalar_one_or_none()  # NAJPIERW zużyj wynik
+            self.db.commit()                          # POTEM commit
             return 1 if deleted_id is not None else 0
         except IntegrityError:
-            self.db.rollback()
-            raise
-        except Exception:
             self.db.rollback()
             raise

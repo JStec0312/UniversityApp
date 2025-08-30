@@ -14,7 +14,7 @@ class Event(BaseModel):
     end_date = Column(DateTime(timezone=True), nullable=False)
     location = Column(String(255), nullable=False)
     image_url = Column(String(512))
-    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)  
+    group_id = Column(Integer, ForeignKey("groups.id", ondelete="CASCADE"), nullable=False)  
     university_id = Column(Integer, ForeignKey("universities.id"), nullable=False)
     
     # Relationships

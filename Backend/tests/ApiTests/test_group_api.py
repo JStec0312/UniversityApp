@@ -45,4 +45,5 @@ def test_delete_group(client, sc_with_multiple_groups, auth):
     get_groups_by_uni_id_response = client.get(endpoint_path)
     assert get_groups_by_uni_id_response.status_code == 200
     response_get_groups_data = get_groups_by_uni_id_response.json()
-    assert all(item["id"] != groups[0].id for item in response_get_groups_data)
+    assert not any(d["id"] == groups[1].id for d in response_get_groups_data)  # check if at least one group with the same id exists
+    

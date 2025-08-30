@@ -97,3 +97,4 @@ def scenario_with_student_admin_and_superior_admin(session):
         "user_superior_admin": (user_superior_admin, password_superior_admin),
         "superior_admin": superior_admin
     }
+
