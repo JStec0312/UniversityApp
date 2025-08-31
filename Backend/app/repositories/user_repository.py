@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
 from app.models.user import User
 from app.repositories.base_repository import BaseRepository
-from app.utils.role_enum import RoleEnum
+from app.utils.enums.role_enum import RoleEnum
 from app.repositories.admin_repository import AdminRepository
 from app.repositories.student_repository import StudentRepository
 from app.models.student import Student

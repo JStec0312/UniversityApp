@@ -14,7 +14,7 @@ from app.core.service_errors import (
     UserNotVerifiedException
 )
 from app.utils.security.require_roles import require_roles
-from app.utils.role_enum import RoleEnum
+from app.utils.enums.role_enum import RoleEnum
 from app.services.service_factory import ServiceFactory
 from app.schemas.student import StudentOut, StudentVerificationIn, StudentAuthOut, StudentAuthIn, StudentMeOut
 from app.schemas.user import UserOut

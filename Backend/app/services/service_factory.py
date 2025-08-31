@@ -16,6 +16,13 @@ from app.services.admin_service import AdminService
 from app.services.university_service import UniversityService
 from app.services.faculty_service import FacultyService
 from app.services.major_service import MajorService
+from app.services.group_membership_service import GroupMembershipService
+
+from app.repositories.group_invitation_repository import GroupInvitationRepository
+from app.repositories.group_member_repository import GroupMemberRepository
+from app.repositories.user_repository import UserRepository
+from app.repositories.admin_repository import AdminRepository
+from app.repositories.group_repository import GroupRepository
 
 class ServiceFactory:
     """
@@ -89,4 +96,6 @@ class ServiceFactory:
     def get_news_service(news_repo) -> NewsService:
         return NewsService(news_repo)
     
-
+    @staticmethod
+    def get_group_membership_service(group_members_repo: GroupMemberRepository = None, group_invite_repo: GroupInvitationRepository = None, user_repository: UserRepository = None, admin_repository: AdminRepository = None, group_repository: GroupRepository = None) -> GroupMembershipService:
+        return GroupMembershipService(group_members_repo, group_invite_repo, user_repository, admin_repository, group_repository)

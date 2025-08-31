@@ -8,7 +8,7 @@ from app.services.service_factory import ServiceFactory
 from app.schemas.admin import AdminVerificationIn, AdminAuthIn, AdminAuthOut, AdminMeOut
 from app.schemas.user import UserOut
 from app.utils.security.require_roles import require_roles
-from app.utils.role_enum import RoleEnum
+from app.utils.enums.role_enum import RoleEnum
 from app.schemas.event import AddEventIn
 
 # Create router instance for admin endpoints

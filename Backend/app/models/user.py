@@ -1,7 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
-from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from app.core.db import Base
 from app.models.base import BaseModel
 
 class User(BaseModel):
@@ -47,5 +45,6 @@ class User(BaseModel):
     forum_posts = relationship("ForumPost", back_populates="user")  # Forum posts created by this user
     event_rsvps = relationship("EventRSVP", back_populates="user")  # Event RSVPs for this user
     superior_admin = relationship("SuperiorAdmin", back_populates="user")  
+    group_members = relationship("GroupMember", back_populates="user", passive_deletes=True)  # Groups this user is a member of
 
 

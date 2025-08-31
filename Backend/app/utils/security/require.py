@@ -1,6 +1,6 @@
 # app/security/require_shortcuts.py
 from fastapi import Depends
-from app.utils.role_enum import RoleEnum
+from app.utils.enums.role_enum import RoleEnum
 from app.utils.security.require_roles import require_roles  # <- twoja funkcja
 
 class _Require:

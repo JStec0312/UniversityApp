@@ -5,7 +5,7 @@ from app.repositories.admin_repository import AdminRepository
 from app.schemas.news import NewsIn, NewsUpdateIn, NewsOut
 from app.models.news import News
 from app.repositories.repository_factory import RepositoryFactory
-from app.utils.role_enum import RoleEnum
+from app.utils.enums.role_enum import RoleEnum
 
 class NewsService:
     

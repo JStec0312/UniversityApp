@@ -18,3 +18,4 @@ class Group(BaseModel):
     superior_groups = relationship("SuperiorGroup", back_populates="group", passive_deletes=True)  # Hierarchical relationships
     news = relationship("News", back_populates="group", passive_deletes=True)  # News posts associated with this group
     superior_admins = relationship("SuperiorAdmin", back_populates="group", passive_deletes=True)  # Superior administrators of this group
+    members = relationship("GroupMember", back_populates="group", passive_deletes=True)  # Members of this group

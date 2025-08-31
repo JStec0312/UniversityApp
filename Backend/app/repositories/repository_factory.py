@@ -15,6 +15,9 @@ from app.repositories.user_repository import UserRepository
 from app.repositories.student_repository import StudentRepository
 from app.repositories.major_repository import MajorRepository
 from app.repositories.admin_repository import AdminRepository
+from app.repositories.group_member_repository import GroupMemberRepository
+from app.repositories.group_invitation_repository import GroupInvitationRepository
+
 
 
 class RepositoryFactory:
@@ -138,3 +141,22 @@ class RepositoryFactory:
         from app.repositories.news_repository import NewsRepository
         return NewsRepository(self.db)
     
+
+    def get_group_member_repository(self) -> GroupMemberRepository:
+        """
+        Create and return a GroupMemberRepository instance.
+
+        Returns:
+            GroupMemberRepository: Repository for group member-related database operations
+        """
+        return GroupMemberRepository(self.db)
+
+    def get_group_invitation_repository(self) -> GroupInvitationRepository:
+        """
+        Create and return a GroupInvitationRepository instance.
+
+        Returns:
+            GroupInvitationRepository: Repository for group invitation-related database operations
+        """
+        return GroupInvitationRepository(self.db)
+

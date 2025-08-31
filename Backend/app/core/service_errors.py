@@ -103,7 +103,16 @@ class GroupHasDependenciesException(AppError):
     status_code = HTTPStatus.CONFLICT
     code = "GROUP_HAS_DEPENDENCIES"
     message = "Group has dependent resources and cannot be modified."
+    
+class NoPermissionForInvitationException(AppError):
+    status_code = HTTPStatus.FORBIDDEN
+    code = "NO_PERMISSION_FOR_INVITATION"
+    message = "User does not have permission to invite others to this group."
 
+class UserAlreadyInGroupException(AppError):
+    status_code = HTTPStatus.CONFLICT
+    code = "USER_ALREADY_IN_GROUP"
+    message = "User is already a member of this group."
 
 InvalidVerificationToken = InvalidVerificationTokenException
 UserNotFound = UserNotFoundException
@@ -134,4 +143,11 @@ __all__ = [
     "UserNotFound",
     "EmailAlreadyExists",
     "GroupNotInUniversityException",
+    "NoPermissionForInvitationException",
+    "UserAlreadyInGroupException"
 ]
+
+class UserAlreadyInvitedError(AppError):
+    status_code = HTTPStatus.CONFLICT
+    code = "USER_ALREADY_INVITED"
+    message = "User is already invited to this group."

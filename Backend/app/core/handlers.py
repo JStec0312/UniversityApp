@@ -134,3 +134,6 @@ def register_exception_handlers(app: FastAPI) -> None:
             code="INTERNAL_ERROR",
         )
         return JSONResponse(500, payload, media_type="application/problem+json")
+
+
+    

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator, model_validator, EmailStr
-from app.utils.role_enum import RoleEnum
+from app.utils.enums.role_enum import RoleEnum
 from typing import Optional
 
 class UniversityOut(BaseModel):

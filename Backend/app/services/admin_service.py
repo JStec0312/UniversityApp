@@ -4,7 +4,7 @@ from app.repositories.admin_repository import AdminRepository
 from app.models.user import User
 from app.repositories.group_repository import GroupRepository
 from app.repositories.user_repository import UserRepository
-from app.utils.role_enum import RoleEnum
+from app.utils.enums.role_enum import RoleEnum
 from fastapi import HTTPException
 from passlib.hash import bcrypt
 from jose import jwt, JWTError, ExpiredSignatureError

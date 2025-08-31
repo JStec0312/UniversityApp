@@ -117,7 +117,7 @@ class EventService:
         if event.university_id != university_id:
             raise HTTPException(status_code=403, detail="You do not have permission to edit this event")
         
-        from app.utils.role_enum import RoleEnum
+        from app.utils.enums.role_enum import RoleEnum
         if user_role != RoleEnum.SUPERIOR_ADMIN.value:
             admin_repo = RepositoryFactory(self.event_repo.db).get_admin_repository()
             if admin_repo.get_group_id_by_user_id(user_id) != event.group_id:
@@ -143,7 +143,7 @@ class EventService:
         if event.university_id != university_id:
             raise HTTPException(status_code=403, detail="You do not have permission to delete this event")
         
-        from app.utils.role_enum import RoleEnum
+        from app.utils.enums.role_enum import RoleEnum
         if user_role != RoleEnum.SUPERIOR_ADMIN.value:
             admin_repo = RepositoryFactory(self.event_repo.db).get_admin_repository()
             if not admin_repo.get_group_id_by_user_id(user_id):

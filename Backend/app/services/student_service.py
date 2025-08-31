@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from app.core.service_errors import UserNotVerifiedException,  FacultyDoesNotBelongToUniversityException, InvalidCredentialsException, InvalidVerificationTokenException, UserAlreadyVerifiedException, MajorDoesNotBelongToFacultyException, UserNotFoundException, InvalidInputException
 from app.models import User
 
-from app.utils.role_enum import RoleEnum
+from app.utils.enums.role_enum import RoleEnum
 
 import os
 SECRET_KEY = os.getenv("JWT_SECRET")
