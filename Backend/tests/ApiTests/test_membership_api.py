@@ -1,3 +1,6 @@
+from app.models.group_member import GroupMember
+
+
 def test_full_membership_test(client, sc_with_student_admin_and_superior_admin, auth, db_session):
     # Arrange
     scenario = sc_with_student_admin_and_superior_admin
@@ -45,4 +48,21 @@ def test_invite_user_to_group_no_permission(client, sc_with_student_admin_and_su
     })
     assert response_group_invite.status_code == 403
 
+def test_see_group_members(client, sc_with_student_admin_and_superior_admin, auth, db_session):
+    scenario = sc_with_student_admin_and_superior_admin
+    member1, password1 = scenario["user_admin"]
+    member2, password2 = scenario["user_superior_admin"]
+    non_member, password3 = scenario["user_student"]
+    group = scenario["group"]
+    auth.login_via_endpoint(client, email=non_member.email, password=password3)
 
+    
+
+    response_see_members = client.get(f"/api/group/{group.id}/members")
+    assert response_see_members.status_code == 200
+    members = response_see_members.json()
+    got_user_ids = {m["user_id"] for m in members}
+    expected_user_ids = {member1.id, member2.id}
+    assert got_user_ids == expected_user_ids
+    assert len(members) == 2
+    

@@ -76,9 +76,11 @@ def scenario_with_student_admin_and_superior_admin(session):
     student = make_student(session, user_student, faculty=faculty, major=major)
 
     user_admin, password_admin = make_user(session, display_name="Admin User", email="adminuser@example.com", password="password", university=university)
+    group_member_admin = make_group_member(session, user_admin, group)
     admin = make_admin(session, group, user_admin)
 
     user_superior_admin, password_superior_admin = make_user(session, display_name="Superior Admin User", email="superioradmin@example.com", password="password", university=university)
+    group_member_superior_admin = make_group_member(session, user_superior_admin, group)
     superior_admin = make_superior_admin(session, user_superior_admin, group=group)
 
     return {

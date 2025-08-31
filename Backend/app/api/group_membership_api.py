@@ -1,9 +1,9 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, Query, Response, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, Query
 from app.services.service_factory import ServiceFactory
 from app.repositories.repository_factory import RepositoryFactory
 from app.schemas.group_invite import GroupInviteCreate, GroupInviteOut
-from app.schemas.group_member import GroupMemberOut
+from app.schemas.group_member import GroupMemberOut, GroupMemberOutDisplayName
 from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.utils.security.require import require
@@ -11,6 +11,19 @@ from app.utils.security.require import require
 
 router  = APIRouter()
 DBSession = Annotated[Session, Depends(get_db)]
+
+# @router.get("/{group_id}/invitations", response_model=list[GroupInviteOut], status_code=200)
+# def get_group_invitations(
+#     group_id: int,
+#     db: DBSession,
+#     user = require.all,
+# ):
+#     rf = RepositoryFactory(db)
+#     sf = ServiceFactory()
+#     svc = sf.get_group_membership_service(
+#         group_invite_repo=rf.get_group_invitation_repository(),
+#     )
+#     return svc.get_group_invitations(group_id=group_id)
 
 @router.post("/{group_id}/invitations", response_model=GroupInviteOut, status_code=201)
 def invite_to_group(
@@ -45,6 +58,24 @@ def accept_invite(
     sf = ServiceFactory()
     svc = sf.get_group_membership_service(
         group_members_repo=rf.get_group_member_repository(),
-        group_invite_repo=rf.get_group_invitation_repository(),
+        user_repository=rf.get_user_repository(),
     )
     return svc.accept_group_invitation(invitation_id=invitation_id, user_id=user["user_id"])
+
+
+
+@router.get("/{group_id}/members", response_model=list[GroupMemberOutDisplayName], status_code=200)
+def get_group_members(
+    group_id: int, 
+    db: DBSession, 
+    user = require.all,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+):
+    rf = RepositoryFactory(db)
+    sf = ServiceFactory()
+    svc = sf.get_group_membership_service(
+        group_members_repo=rf.get_group_member_repository(),
+        user_repository=rf.get_user_repository(),
+    )
+    return svc.get_group_members(group_id=group_id, university_id=user["university_id"],limit=limit, offset=offset)

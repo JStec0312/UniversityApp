@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class GroupMemberOut(BaseModel):
     id: int
@@ -7,3 +7,13 @@ class GroupMemberOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+class GroupMemberOutDisplayName(BaseModel):
+    id: int
+    user_id: int
+    group_id: int
+    display_name: str
+    model_config = ConfigDict(
+        orm_mode=True,
+        from_attributes=True
+    )

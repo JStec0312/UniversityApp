@@ -9,5 +9,9 @@ class GroupMember(BaseModel):
     group_id = Column(Integer, ForeignKey('groups.id'), nullable=False)
 
     # Relationship
-    user = relationship("User", back_populates="group_members")
+    user = relationship("User", back_populates="group_members", lazy="joined")
     group = relationship("Group", back_populates="members")
+
+    @property
+    def display_name(self):
+        return self.user.display_name if self.user else None

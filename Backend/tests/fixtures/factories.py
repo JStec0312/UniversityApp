@@ -3,6 +3,8 @@ from uuid import uuid4
 from app.models import University, Faculty, Major, Group, User, Admin, SuperiorAdmin, Event, News, Student
 from passlib.hash import bcrypt
 
+from app.models.group_member import GroupMember
+
 def make_university(session, name):
     uni = University(name=name)
     session.add(uni)
@@ -65,3 +67,8 @@ def make_news(session, university, title, content):
     session.flush()
     return news
 
+def make_group_member(session, user, group):
+    group_member = GroupMember(user_id=user.id, group_id=group.id)
+    session.add(group_member)
+    session.flush()
+    return group_member

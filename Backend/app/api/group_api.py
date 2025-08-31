@@ -41,3 +41,9 @@ def delete_group(group_id: int, db: DBSession, user = require.superior):
     group_service = ServiceFactory.get_group_service(group_repo)
     group_service.delete_group(group_id=group_id, university_id=user["university_id"])
 
+@router.get("/groups/{group_id}", response_model=GroupByUniOut)
+def get_group(group_id: int, db: DBSession, user = require.all):
+    group_repo = RepositoryFactory(db).get_group_repository()
+    group_service = ServiceFactory.get_group_service(group_repo)
+    group = group_service.get_group(group_id=group_id, university_id=user["university_id"])
+    return group

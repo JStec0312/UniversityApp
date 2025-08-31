@@ -78,3 +78,7 @@ class GroupMembershipService:
             if code == '23503':
                 raise UserNotFoundException()
             raise
+
+
+    def get_group_members(self, group_id:int, university_id:int, limit:int, offset:int) -> list[GroupMember]:
+        return self.group_member_repository.get_group_members_with_display_name(group_id=group_id, university_id=university_id, limit=limit, offset=offset)
