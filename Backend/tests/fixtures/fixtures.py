@@ -13,3 +13,6 @@ def sc_with_verified_user_student(db_session):
 def sc_with_multiple_groups(db_session):
     return scenario_with_multiple_groups(db_session)
 
+@pytest.fixture
+def sc_with_student_admin_and_superior_admin(db_session):
+    return scenario_with_student_admin_and_superior_admin(db_session)

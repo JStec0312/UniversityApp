@@ -71,8 +71,6 @@ def scenario_with_verified_user_student(session):
 def scenario_with_student_admin_and_superior_admin(session):
     university, faculty, major = _university_faculty_major(session)
     group = make_group(session, university, "Test Group")
-    event = make_event(session, university, "Test Event", "This is a test event.")
-    news = make_news(session, university, "Test News", "This is a test news article.")
 
     user_student, password_student = make_user(session, "Student User", "studentuser@example.com", "password", university=university)
     student = make_student(session, user_student, faculty=faculty, major=major)

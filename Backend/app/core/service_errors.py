@@ -114,6 +114,21 @@ class UserAlreadyInGroupException(AppError):
     code = "USER_ALREADY_IN_GROUP"
     message = "User is already a member of this group."
 
+class NotPermittedForThisInvitationException(AppError):
+    status_code = HTTPStatus.FORBIDDEN
+    code = "NOT_PERMITTED_FOR_THIS_INVITATION"
+    message = "User is not permitted to accept this invitation."
+
+class InvitationNotFoundException(AppError):
+    status_code = HTTPStatus.NOT_FOUND
+    code = "INVITATION_NOT_FOUND"
+    message = "Invitation not found."
+
+class InvitationNotActiveException(AppError):
+    status_code = HTTPStatus.BAD_REQUEST
+    code = "INVITATION_NOT_ACTIVE"
+    message = "Invitation is not active."
+
 InvalidVerificationToken = InvalidVerificationTokenException
 UserNotFound = UserNotFoundException
 EmailAlreadyExists = EmailAlreadyExistsException
@@ -144,7 +159,10 @@ __all__ = [
     "EmailAlreadyExists",
     "GroupNotInUniversityException",
     "NoPermissionForInvitationException",
-    "UserAlreadyInGroupException"
+    "UserAlreadyInGroupException",
+    "NotPermittedForThisInvitationException",
+    "InvitationNotFoundException",
+    "InvitationNotActiveException"
 ]
 
 class UserAlreadyInvitedError(AppError):

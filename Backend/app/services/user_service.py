@@ -1,4 +1,3 @@
-from sqlalchemy import func
 from app.models.user import User
 import re
 from app.core.service_errors import EmailAlreadyExistsException, InvalidCredentialsException, ServerErrorException, UserAlreadyVerifiedException, UserNotFoundException, UserNotVerifiedException
@@ -7,7 +6,7 @@ from app.repositories.user_repository import UserRepository
 from sqlalchemy.exc import IntegrityError
 from passlib.hash import bcrypt
 from app.utils.security.jwt_tokens import create_verify_token
-from app.utils.role_enum import RoleEnum
+from app.utils.enums.role_enum import RoleEnum
 from app.schemas.user import UserOut
 import os
 SECRET_KEY = os.getenv("JWT_SECRET")

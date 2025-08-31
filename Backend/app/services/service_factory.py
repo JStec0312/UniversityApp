@@ -17,12 +17,16 @@ from app.services.university_service import UniversityService
 from app.services.faculty_service import FacultyService
 from app.services.major_service import MajorService
 from app.services.group_membership_service import GroupMembershipService
+from app.services.me_service import MeService
 
 from app.repositories.group_invitation_repository import GroupInvitationRepository
 from app.repositories.group_member_repository import GroupMemberRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.admin_repository import AdminRepository
 from app.repositories.group_repository import GroupRepository
+from app.repositories.event_repository import EventRepository
+from app.repositories.student_repository import StudentRepository
+
 
 class ServiceFactory:
     """
@@ -99,3 +103,24 @@ class ServiceFactory:
     @staticmethod
     def get_group_membership_service(group_members_repo: GroupMemberRepository = None, group_invite_repo: GroupInvitationRepository = None, user_repository: UserRepository = None, admin_repository: AdminRepository = None, group_repository: GroupRepository = None) -> GroupMembershipService:
         return GroupMembershipService(group_members_repo, group_invite_repo, user_repository, admin_repository, group_repository)
+
+
+    @staticmethod
+    def get_me_service(
+        user_repository: UserRepository = None,
+        group_repository: GroupRepository = None,
+        event_repository: EventRepository = None,
+        admin_repository: AdminRepository = None,
+        student_repository: StudentRepository = None,
+        group_member_repository: GroupMemberRepository = None,
+        group_invitation_repository: GroupInvitationRepository = None
+    ) -> MeService:
+        return MeService(
+            user_repository,
+            group_repository,
+            event_repository,
+            admin_repository,
+            student_repository,
+            group_member_repository,
+            group_invitation_repository
+        )

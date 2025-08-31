@@ -14,3 +14,8 @@ class Auth:
         assert client.cookies.get("access_token") is not None, "No access token in cookies"
         return client
 
+    def logout_via_endpoint(self, client):
+        response = client.post("/api/user/logout")
+        assert response.status_code == 200
+        assert client.cookies.get("access_token") is None, "Access token was not removed"
+        return client

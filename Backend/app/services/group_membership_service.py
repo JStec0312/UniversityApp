@@ -10,7 +10,7 @@ from app.repositories.group_invitation_repository import GroupInvitationReposito
 from app.repositories.group_repository import GroupRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.admin_repository import AdminRepository
-from app.core.service_errors import NoPermissionForInvitationException, UserAlreadyInGroupException, UserNotFoundException, GroupNotFoundException, UserAlreadyInvitedError
+from app.core.service_errors import NoPermissionForInvitationException, UserAlreadyInGroupException, UserNotFoundException, GroupNotFoundException, UserAlreadyInvitedError, NotPermittedForThisInvitationException, InvitationNotFoundException, InvitationNotActiveException
 from app.utils.enums.invitation_status_enum import InvitationStatus
 
 class GroupMembershipService:
@@ -54,3 +54,27 @@ class GroupMembershipService:
                 raise UserNotFoundException()
             raise
         return inv
+    
+    def accept_group_invitation(self, invitation_id:int, user_id:int) -> GroupMember:
+        inv = self.group_invitation_repository.get_by_id(invitation_id)
+        if not inv:
+            raise InvitationNotFoundException()
+        if inv.status != InvitationStatus.PENDING:
+            raise InvitationNotActiveException()
+        if inv.invited_user_id != user_id:
+            raise NotPermittedForThisInvitationException()
+
+        if self.group_member_repository.get_first_with_conditions(conditions = (GroupMember.user_id == user_id, GroupMember.group_id == inv.group_id)):
+            raise UserAlreadyInGroupException()
+
+        try:
+            group_member =  self.group_member_repository.create(GroupMember(user_id=user_id, group_id=inv.group_id))
+            self.group_invitation_repository.update(inv, {"status": InvitationStatus.ACCEPTED})
+            return group_member
+        except IntegrityError as e:
+            code = getattr(getattr(e, 'orig', None), 'pgcode', None)
+            if code == '23505':
+                raise UserAlreadyInGroupException()
+            if code == '23503':
+                raise UserNotFoundException()
+            raise
