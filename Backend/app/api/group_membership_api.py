@@ -32,7 +32,6 @@ def invite_to_group(
         invited_user_id=invite_data.invited_user_id,
         inviter_user_id=user["user_id"],
         group_id=group_id,
-        expires_at=getattr(invite_data, "expires_at", None),
     )
     return inv
 

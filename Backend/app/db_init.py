@@ -10,7 +10,6 @@ from app.models import (
     Major,
     News,
     Student,
-    SuperiorGroup,
     University,
     User
 )

@@ -24,7 +24,7 @@ class GroupMembershipService:
 
     def invite_user_to_group(self, invited_user_id:int, inviter_user_id: int, group_id:int) -> GroupInvitation:
         #check if group exists
-        if not self.group_repository.get_first_with_conditions(conditions = (Group.id == group_id)):
+        if not self.group_repository.get_first_with_conditions(conditions = (Group.id == group_id,)):
             raise GroupNotFoundException()
 
         #check if admin has a permission to invite
@@ -69,7 +69,7 @@ class GroupMembershipService:
 
         try:
             group_member =  self.group_member_repository.create(GroupMember(user_id=user_id, group_id=inv.group_id))
-            self.group_invitation_repository.update(inv, {"status": InvitationStatus.ACCEPTED})
+            self.group_invitation_repository.update_by_id(inv.id, {"status": InvitationStatus.ACCEPTED})
             return group_member
         except IntegrityError as e:
             code = getattr(getattr(e, 'orig', None), 'pgcode', None)

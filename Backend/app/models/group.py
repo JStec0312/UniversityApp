@@ -15,7 +15,6 @@ class Group(BaseModel):
     # Use string reference to avoid circular import
     admins = relationship("Admin", back_populates="group", passive_deletes=True)  # Administrators of this group
     events = relationship("Event", back_populates="group", passive_deletes=True)  # Events associated with this group
-    superior_groups = relationship("SuperiorGroup", back_populates="group", passive_deletes=True)  # Hierarchical relationships
     news = relationship("News", back_populates="group", passive_deletes=True)  # News posts associated with this group
     superior_admins = relationship("SuperiorAdmin", back_populates="group", passive_deletes=True)  # Superior administrators of this group
     members = relationship("GroupMember", back_populates="group", passive_deletes=True)  # Members of this group
