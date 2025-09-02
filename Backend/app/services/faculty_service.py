@@ -8,6 +8,6 @@ class FacultyService:
         faculties =  self.get_faculties_by_university_id
         return [
             FacultyOut(id=f.id, name=f.name, university_id=f.university_id)
-            for f in self.faculty_repository.get_by_university_id(university_id)
+            for f in faculties
         ]
     

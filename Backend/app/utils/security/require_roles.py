@@ -1,10 +1,11 @@
 from typing import Sequence
 from fastapi import Request, Depends, HTTPException
 from jose import jwt, JWTError, ExpiredSignatureError
+from app.utils.security.jwt_tokens import SECRET, ALG
 import os
 
-SECRET_KEY = os.getenv("JWT_SECRET", "dev-secret")
-ALG = "HS256"
+SECRET_KEY = SECRET
+ALG = ALG
 
 def _parse_user_from_cookie(request: Request) -> dict:
     token = request.cookies.get("access_token")

@@ -1,30 +1,30 @@
 # app/api/user_api.py
-from fastapi import APIRouter, Depends, Query,  BackgroundTasks, Response, Request
-from sqlalchemy.orm import Session
-from app.core.db import get_db
+from fastapi import APIRouter, Depends, Query, BackgroundTasks, Response, Request
 from app.schemas.user import UserCreate, UserOut, EmailOut, UserAuthIn, UserAuthOut
-from app.repositories.repository_factory import RepositoryFactory
-from app.services.service_factory import ServiceFactory
+from app.services.user_service import UserService
+from app.services.service_factory import get_user_service
 from app.utils.security.require import require
 from app.utils.send_verification_mail import send_verification_email
 from app.utils.security.jwt_tokens import create_access_token
-from typing import Annotated
 import os
-router = APIRouter()
-DBSession = Annotated[Session, Depends(get_db)]
 
-SECURE = os.getenv("SECURE_COOKIES", "false").lower() == "true"   # dev: False, prod: True
+router = APIRouter()
+
+SECURE = os.getenv("SECURE_COOKIES", "false")
 SAMESITE = os.getenv("COOKIE_SAMESITE", "lax")                    # prod (inne domeny): "none"
 COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")                        # zwykle None
 TTL = int(os.getenv("ACCESS_TTL", "3600"))
 
 @router.post("/", response_model=UserOut, status_code=201)
-def create_user(user_in: UserCreate, response: Response, request: Request, background: BackgroundTasks,  db: DBSession):
-    user_repo = RepositoryFactory(db).get_user_repository()
-    user_service = ServiceFactory.get_user_service(user_repo)
+def create_user(
+    user_in: UserCreate,
+    response: Response,
+    request: Request,
+    background: BackgroundTasks,
+    user_service: UserService = Depends(get_user_service),
+):
     new_user = user_service.create_user(user_in)
-    
-    
+
     token = user_service.issue_verification_token(new_user.id)
     background.add_task(
         send_verification_email,
@@ -38,9 +38,12 @@ def create_user(user_in: UserCreate, response: Response, request: Request, backg
 
 
 @router.post("/token/{user_id}")
-def resend_verification_token(user_id: int, background: BackgroundTasks, request:Request, db: DBSession):
-    user_repo = RepositoryFactory(db).get_user_repository()
-    user_service = ServiceFactory.get_user_service(user_repo)
+def resend_verification_token(
+    user_id: int,
+    background: BackgroundTasks,
+    request: Request,
+    user_service: UserService = Depends(get_user_service),
+):
     token, to_email, to_user, user_university_id = user_service.prepare_verification_token(user_id)
     background.add_task(
         send_verification_email,
@@ -51,36 +54,46 @@ def resend_verification_token(user_id: int, background: BackgroundTasks, request
     )
     return {"status": "queued"}
 
+
 @router.get("/email", response_model=EmailOut, status_code=200)
-def get_user_email(db: DBSession, user = require.all):
-    user_repo = RepositoryFactory(db).get_user_repository()
-    user_service = ServiceFactory.get_user_service(user_repo)
+def get_user_email(
+    user_service: UserService = Depends(get_user_service),
+    user = require.all,
+):
     email = user_service.get_user_email(user["user_id"])
     return EmailOut(email=email)
 
+
 @router.get("/search", response_model=list[UserOut])
-def search_users (
-    db: DBSession,
+def search_users(
+    user_service: UserService = Depends(get_user_service),
     user: dict = require.all,
     name: str = Query(..., min_length=1, max_length=100),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    response: Response = None
+    response: Response = None,
 ):
-    user_repo = RepositoryFactory(db).get_user_repository()
-    user_service = ServiceFactory.get_user_service(user_repo)
-
-    users, total = user_service.search_users(name=name, university_id=user["university_id"], limit=limit, offset=offset)
-    response.headers["X-Total-Count"] = str(total)
-
+    users, total = user_service.search_users(
+        name=name,
+        university_id=user["university_id"],
+        limit=limit,
+        offset=offset,
+    )
+    if response is not None:
+        response.headers["X-Total-Count"] = str(total)
     return users
 
-@router.get("/{user_id}", response_model=UserOut)
-def get_user(db: DBSession, user_id: int, user = require.all):
-    user_repo = RepositoryFactory(db).get_user_repository()
-    user_service = ServiceFactory.get_user_service(user_repo)
-    entity = user_service.get_user_by_id(user_id=user_id, university_id=user["university_id"])
 
+@router.get("/{user_id}", response_model=UserOut)
+def get_user(
+    user_id: int,
+    user_service: UserService = Depends(get_user_service),
+    user = require.all,
+):
+    entity = user_service.get_user_by_id(
+        user_id=user_id,
+        university_id=user["university_id"],
+    )
     return entity
 
 
@@ -91,28 +104,28 @@ def logout(response: Response):
 
 
 @router.post("/login", response_model=UserAuthOut)
-def login(user_in: UserAuthIn, response: Response, db: DBSession):
-    user_repo = RepositoryFactory(db).get_user_repository()
-    user_service = ServiceFactory.get_user_service(user_repo)
+def login(
+    user_in: UserAuthIn,
+    response: Response,
+    user_service: UserService = Depends(get_user_service),
+):
     user, roles = user_service.authenticate_user(user_in)
-   
-    
+
     token = create_access_token(
         user_id=user.id,
         university_id=user.university_id,
         roles=roles,
-        ttl_sec=3600
+        ttl_sec=TTL,  # korzystamy z ENV
     )
 
     response.set_cookie(
         key="access_token",
         value=token,
         httponly=True,
-        secure=SECURE,          
-        samesite=SAMESITE,      
+        secure=False,
+        samesite= "lax",
         path="/",
         max_age=TTL,
-        domain=None,   
     )
 
     return UserAuthOut(
@@ -120,6 +133,5 @@ def login(user_in: UserAuthIn, response: Response, db: DBSession):
         display_name=user.display_name,
         roles=roles,
         university_id=user.university_id,
-        avatar_image_url=user.avatar_image_url
+        avatar_image_url=user.avatar_image_url,
     )
-

@@ -51,6 +51,7 @@ def client(db_session):
     def _get_db():
         try:
             yield db_session
+            db_session.commit()
         finally:
             pass
 

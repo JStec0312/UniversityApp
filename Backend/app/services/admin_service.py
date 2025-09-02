@@ -1,59 +1,27 @@
-from app.core.service_errors import UserNotFoundException, UserAlreadyVerifiedException, InvalidVerificationTokenException, GroupNotFoundException, GroupNotBelongToUniversityException, InvalidGroupPasswordException
-from app.schemas.admin import AdminAuthIn, AdminAuthOut, AdminOut, AdminMeOut, AdminVerificationIn
-from app.repositories.admin_repository import AdminRepository
-from app.models.user import User
-from app.repositories.group_repository import GroupRepository
-from app.repositories.user_repository import UserRepository
-from app.utils.enums.role_enum import RoleEnum
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from fastapi import HTTPException
-from passlib.hash import bcrypt
-from jose import jwt, JWTError, ExpiredSignatureError
-from datetime import datetime, timedelta
+
+from app.repositories.admin_repository import AdminRepository
+from app.repositories.event_repository import EventRepository
 from app.schemas.event import AddEventIn
 from app.models.event import Event
-from zoneinfo import ZoneInfo
-
-
-import os
-SECRET_KEY = os.getenv("JWT_SECRET")
+from app.utils.uow import uow
 
 class AdminService:
-
-
-    def __init__(self, admin_repo: AdminRepository, group_repo: GroupRepository = None, user_repo: UserRepository = None):
+    def __init__(self, admin_repo: AdminRepository, group_repo=None, user_repo=None):
         self.admin_repo = admin_repo
         self.group_repo = group_repo
         self.user_repo = user_repo
-
-    
-
-
-
-        
-        
-    
-    def get_current_admin(self, user_id: int) -> AdminMeOut:
-        admin = self.admin_repo.get_by_user_id(user_id)
-        if not admin:
-            raise HTTPException(status_code=404, detail="Admin not found")
-        return AdminMeOut(
-            role=RoleEnum.ADMIN,
-            user_id=admin.user_id,
-            email=admin.user.email,
-            display_name=admin.user.display_name,
-            university_id=admin.user.university_id,
-            group_id=admin.group_id
-        )
-
+        self.session = admin_repo.session  # jedna wspólna sesja/UoW
 
     def create_event(self, event_data: AddEventIn, user_id: int, university_id: int):
-        event_repo = self.admin_repo.get_event_repository()
+        # 1) uprawnienia/kontekst
         group_id = self.admin_repo.get_group_id_by_user_id(user_id)
-        
-
         if not group_id:
             raise HTTPException(status_code=404, detail="Group not found for user")
 
+        # 2) walidacja czasu
         start = event_data.start_date
         end = event_data.end_date
         now = datetime.now(ZoneInfo("Europe/Warsaw"))
@@ -63,6 +31,8 @@ class AdminService:
         if start < now:
             raise HTTPException(status_code=400, detail="Start date cannot be in the past")
 
+        # 3) zapis w jednej transakcji
+        event_repo = EventRepository(self.session)
         new_event = Event(
             title=event_data.title,
             description=event_data.description,
@@ -70,14 +40,15 @@ class AdminService:
             end_date=end,
             location=event_data.location,
             image_url=event_data.image_url,
-            group_id=group_id, 
-            university_id=university_id
+            group_id=group_id,
+            university_id=university_id,
         )
 
-        event_repo.create(new_event)
+        with uow(self.session):
+            event_repo.create(new_event)  # repo robi flush(), nie commit
 
         return {
             "status": "success",
             "message": "Event created successfully",
-            "event_id": new_event.id
+            "event_id": new_event.id,
         }

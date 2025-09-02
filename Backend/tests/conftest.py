@@ -6,6 +6,10 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
+os.environ.setdefault("JWT_SECRET", "dev-secret")
+os.environ.setdefault("SECURE_COOKIES", "false")
+os.environ.setdefault("COOKIE_SAMESITE", "lax")
+os.environ.pop("COOKIE_DOMAIN", None)  # host-only cookie dla testserver
 from app.main import app
 from app.core.db import Base, get_db
 from tests.fixtures import *

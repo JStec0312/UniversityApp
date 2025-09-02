@@ -129,6 +129,21 @@ class InvitationNotActiveException(AppError):
     code = "INVITATION_NOT_ACTIVE"
     message = "Invitation is not active."
 
+class NoPermissionForMakingAdminException(AppError):
+    status_code = HTTPStatus.FORBIDDEN
+    code = "NO_PERMISSION_FOR_MAKING_ADMIN"
+    message = "User does not have permission to make others admin."
+
+class UserIsNotMemberOfGroupException(AppError):
+    status_code = HTTPStatus.FORBIDDEN
+    code = "USER_IS_NOT_MEMBER_OF_GROUP"
+    message = "User is not a member of this group."
+
+class UserIsAlreadyAdminException(AppError):
+    status_code = HTTPStatus.CONFLICT
+    code = "USER_IS_ALREADY_ADMIN"
+    message = "User is already an admin of this group."
+
 InvalidVerificationToken = InvalidVerificationTokenException
 UserNotFound = UserNotFoundException
 EmailAlreadyExists = EmailAlreadyExistsException
@@ -162,7 +177,9 @@ __all__ = [
     "UserAlreadyInGroupException",
     "NotPermittedForThisInvitationException",
     "InvitationNotFoundException",
-    "InvitationNotActiveException"
+    "InvitationNotActiveException",
+    "NoPermissionForMakingAdminException",
+    "UserIsNotMemberOfGroupException"
 ]
 
 class UserAlreadyInvitedError(AppError):

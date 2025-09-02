@@ -11,7 +11,8 @@ class Auth:
     def login_via_endpoint(self, client, *, email: str, password: str  ):
         response = client.post(LOGIN_PATH, json={"email": email, "password": password})
         assert response.status_code == 200
-        assert client.cookies.get("access_token") is not None, "No access token in cookies"
+        token = client.cookies.get("access_token")
+        assert token is not None, "No access token in cookies"
         return client
 
     def logout_via_endpoint(self, client):

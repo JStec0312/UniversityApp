@@ -17,3 +17,7 @@ class GroupMemberOutDisplayName(BaseModel):
         orm_mode=True,
         from_attributes=True
     )
+
+class GroupAdminCreate(BaseModel):
+    invited_user_id: int
+    

@@ -1,41 +1,49 @@
 from app.models.user import User
 import re
-from app.core.service_errors import EmailAlreadyExistsException, InvalidCredentialsException, ServerErrorException, UserAlreadyVerifiedException, UserNotFoundException, UserNotVerifiedException
+from app.core.service_errors import (
+    EmailAlreadyExistsException,
+    InvalidCredentialsException,
+    ServerErrorException,
+    UserAlreadyVerifiedException,
+    UserNotFoundException,
+    UserNotVerifiedException,
+)
 from app.schemas.user import UserCreate, UserAuthIn
 from app.repositories.user_repository import UserRepository
 from sqlalchemy.exc import IntegrityError
 from passlib.hash import bcrypt
 from app.utils.security.jwt_tokens import create_verify_token
 from app.utils.enums.role_enum import RoleEnum
+from app.utils.uow import uow
 from app.schemas.user import UserOut
 import os
+
 SECRET_KEY = os.getenv("JWT_SECRET")
 
 class UserService:
     def __init__(self, user_repository: UserRepository):
         self.user_repository: UserRepository = user_repository
-
+        # jedna sesja do transakcji (UoW)
+        self.session = user_repository.session
 
     def create_user(self, user_data: UserCreate) -> User:
-        
         hashed_password = bcrypt.hash(user_data.password)
         user = User(
-                email=user_data.email,
-                hashed_password=hashed_password,
-                display_name=user_data.display_name,
-                university_id=user_data.university_id,
-
-            )
-        
+            email=user_data.email,
+            hashed_password=hashed_password,
+            display_name=user_data.display_name,
+            university_id=user_data.university_id,
+        )
         try:
-            new_user =  self.user_repository.create(user)
-            return new_user
-
+            # transakcja kontrolowana przez serwis
+            with uow(self.session):
+                new_user = self.user_repository.create(user)  # repo robi flush, bez commit
+                return new_user
         except IntegrityError:
+            # np. UNIQUE(email)
             raise EmailAlreadyExistsException("Email already exists")
-        except Exception as e:
+        except Exception:
             raise ServerErrorException("Error creating user")
-
 
     def prepare_verification_token(self, user_id: int) -> tuple[str, str, str, str]:
         user = self.user_repository.get_by_id(user_id)
@@ -43,21 +51,17 @@ class UserService:
             raise UserNotFoundException("User not found")
         if user.verified:
             raise UserAlreadyVerifiedException("User already verified")
-        
         token = create_verify_token(user_id)
         return token, user.email, user.display_name, user.university_id
 
     def issue_verification_token(self, user_id: int) -> str:
         return create_verify_token(user_id)
 
-
-    
-    def get_user_email(self, user_id:int) -> str:
+    def get_user_email(self, user_id: int) -> str:
         user = self.user_repository.get_by_id(user_id)
         if not user:
             raise UserNotFoundException("User not found")
         return user.email
-    
 
     def get_user_by_id(self, user_id: int, university_id: int) -> UserOut:
         user = self.user_repository.get_first_with_conditions(
@@ -66,7 +70,7 @@ class UserService:
         if user is None:
             raise UserNotFoundException("User not found")
         return user
-    
+
     @staticmethod
     def _normalize(term: str) -> str:
         term = (term or "").strip()
@@ -81,8 +85,8 @@ class UserService:
         name: str,
         university_id: int,
         limit: int = 20,
-        offset: int = 0
-    ) -> tuple[list[User], int]:                    
+        offset: int = 0,
+    ) -> tuple[list[User], int]:
         term = self._normalize(name)
         safe = self._escape_like(term)
 
@@ -102,12 +106,10 @@ class UserService:
             offset=offset,
             order_by=(User.display_name.asc(), User.id.asc()),  # stabilna paginacja
         )
-
         total = self.user_repository.count_with_conditions(conditions)
         return items, total
-    
 
-    def authenticate_user(self, user_in: UserAuthIn ) ->  tuple[User, list[str]]:
+    def authenticate_user(self, user_in: UserAuthIn) -> tuple[User, list[str]]:
         user = self.user_repository.get_by_email(user_in.email)
         if not user:
             raise UserNotFoundException("User not found")
@@ -127,5 +129,3 @@ class UserService:
             roles.append(RoleEnum.SUPERIOR_ADMIN.value)
 
         return user, roles
-    
-

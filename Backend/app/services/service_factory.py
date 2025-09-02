@@ -1,12 +1,22 @@
+# app/services/service_factory.py
 """
-Service Factory module for creating service instances.
+Service providers for FastAPI DI (preferred) + thin compatibility shim.
 
-This module provides the ServiceFactory class which follows the factory pattern
-to create and provide instances of various service classes.
+Uzywaj get_*_service w routerach:
+    from fastapi import Depends
+    from app.services.service_factory import get_group_membership_service
+
+    def handler(..., svc: GroupMembershipService = Depends(get_group_membership_service), ...):
+        ...
 """
 
+from typing import Optional
+from fastapi import Depends
+from sqlalchemy.orm import Session
 
+from app.core.db import get_db
 
+# Services
 from app.services.event_service import EventService
 from app.services.group_service import GroupService
 from app.services.news_service import NewsService
@@ -19,6 +29,7 @@ from app.services.major_service import MajorService
 from app.services.group_membership_service import GroupMembershipService
 from app.services.me_service import MeService
 
+# Repositories
 from app.repositories.group_invitation_repository import GroupInvitationRepository
 from app.repositories.group_member_repository import GroupMemberRepository
 from app.repositories.user_repository import UserRepository
@@ -27,100 +38,101 @@ from app.repositories.group_repository import GroupRepository
 from app.repositories.event_repository import EventRepository
 from app.repositories.student_repository import StudentRepository
 
-
-class ServiceFactory:
-    """
-    Factory class to create service instances.
-    
-    This class follows the Factory pattern to provide a single point of creation
-    for all service objects, ensuring they are created with the correct dependencies.
-    It abstracts the creation logic and helps with dependency injection.
-    """
-
-    @staticmethod
-    def get_user_service(user_repo) -> UserService:
-        """
-        Create and return a UserService instance.
-        
-        Args:
-            user_repo: User repository instance
-            
-        Returns:
-            UserService: Service for user-related business logic
-        """
-        return UserService(user_repo)
-    
-    @staticmethod
-    def get_student_service(user_repo, faculty_repo = None, major_repo = None) -> StudentService:
-        """
-        Create and return a StudentService instance.
-        
-        Args:
-            user_repo: User repository instance
-            
-        Returns:
-            StudentService: Service for student-related business logic
-        """
-        return StudentService(user_repo, faculty_repo, major_repo)
-
-    @staticmethod
-    def get_admin_service(user_repo) -> AdminService:
-        """
-        Create and return an AdminService instance.
-        
-        Args:
-            user_repo: User repository instance (or admin repository)
-            
-        Returns:
-            AdminService: Service for admin-related business logic
-        """
-        return AdminService(user_repo)
-    
-    @staticmethod
-    def get_university_service(university_repo) -> UniversityService:
-        return UniversityService(university_repo)
-    
-    @staticmethod
-    def get_faculty_service(faculty_repo) -> FacultyService:
-        return FacultyService(faculty_repo)
-    
-    @staticmethod
-    def get_major_service(major_repo):
-        return MajorService(major_repo)
-    
-    @staticmethod
-    def get_group_service(group_repo) -> GroupService:
-        return GroupService(group_repo)
-    
-    @staticmethod
-    def get_event_service(event_repo) -> EventService:
-        return EventService(event_repo)
-    
-    @staticmethod
-    def get_news_service(news_repo) -> NewsService:
-        return NewsService(news_repo)
-    
-    @staticmethod
-    def get_group_membership_service(group_members_repo: GroupMemberRepository = None, group_invite_repo: GroupInvitationRepository = None, user_repository: UserRepository = None, admin_repository: AdminRepository = None, group_repository: GroupRepository = None) -> GroupMembershipService:
-        return GroupMembershipService(group_members_repo, group_invite_repo, user_repository, admin_repository, group_repository)
+# Opcjonalne repo (jesli masz)
+try:
+    from app.repositories.university_repository import UniversityRepository
+except Exception:
+    UniversityRepository = None  # type: ignore
+try:
+    from app.repositories.faculty_repository import FacultyRepository
+except Exception:
+    FacultyRepository = None  # type: ignore
+try:
+    from app.repositories.major_repository import MajorRepository
+except Exception:
+    MajorRepository = None  # type: ignore
+try:
+    from app.repositories.news_repository import NewsRepository
+except Exception:
+    NewsRepository = None  # type: ignore
 
 
-    @staticmethod
-    def get_me_service(
-        user_repository: UserRepository = None,
-        group_repository: GroupRepository = None,
-        event_repository: EventRepository = None,
-        admin_repository: AdminRepository = None,
-        student_repository: StudentRepository = None,
-        group_member_repository: GroupMemberRepository = None,
-        group_invitation_repository: GroupInvitationRepository = None
-    ) -> MeService:
-        return MeService(
-            user_repository,
-            group_repository,
-            event_repository,
-            admin_repository,
-            student_repository,
-            group_member_repository,
-            group_invitation_repository
-        )
+# -------- PREFERRED: DI providers --------
+
+def get_user_service(db: Session = Depends(get_db)) -> UserService:
+    return UserService(UserRepository(db))
+
+def get_student_service(db: Session = Depends(get_db)) -> StudentService:
+    faculty_repo = FacultyRepository(db) if FacultyRepository else None
+    major_repo = MajorRepository(db) if MajorRepository else None
+    student_repo = StudentRepository(db) if StudentRepository else None
+    user_repo = UserRepository(db) if UserRepository else None
+    return StudentService(faculty_repo=faculty_repo, major_repo=major_repo, student_repo=student_repo, user_repo=user_repo)
+
+def get_admin_service(db: Session = Depends(get_db)) -> AdminService:
+    # jesli masz dedykowany AdminRepository dla AdminService, podmien tutaj
+    return AdminService(UserRepository(db))
+
+def get_university_service(db: Session = Depends(get_db)) -> UniversityService:
+    if not UniversityRepository:
+        raise RuntimeError("UniversityRepository not available")
+    return UniversityService(UniversityRepository(db))
+
+def get_faculty_service(db: Session = Depends(get_db)) -> FacultyService:
+    if not FacultyRepository:
+        raise RuntimeError("FacultyRepository not available")
+    return FacultyService(FacultyRepository(db))
+
+def get_major_service(db: Session = Depends(get_db)) -> MajorService:
+    if not MajorRepository:
+        raise RuntimeError("MajorRepository not available")
+    return MajorService(MajorRepository(db))
+
+def get_group_service(db: Session = Depends(get_db)) -> GroupService:
+    return GroupService(GroupRepository(db))
+
+def get_event_service(db: Session = Depends(get_db)) -> EventService:
+    return EventService(EventRepository(db))
+
+def get_news_service(db: Session = Depends(get_db)) -> NewsService:
+    if not NewsRepository:
+        raise RuntimeError("NewsRepository not available")
+    return NewsService(NewsRepository(db))
+
+def get_group_membership_service(db: Session = Depends(get_db)) -> GroupMembershipService:
+    return GroupMembershipService(
+        GroupMemberRepository(db),
+        GroupInvitationRepository(db),
+        UserRepository(db),
+        AdminRepository(db),
+        GroupRepository(db),
+    )
+
+def get_me_service(db: Session = Depends(get_db)) -> MeService:
+    return MeService(
+        UserRepository(db),
+        GroupRepository(db),
+        EventRepository(db),
+        AdminRepository(db),
+        StudentRepository(db),
+        GroupMemberRepository(db),
+        GroupInvitationRepository(db),
+    )
+
+
+__all__ = [
+    # DI providers
+    "get_user_service",
+    "get_student_service",
+    "get_admin_service",
+    "get_university_service",
+    "get_faculty_service",
+    "get_major_service",
+    "get_group_service",
+    "get_event_service",
+    "get_news_service",
+    "get_group_membership_service",
+    "get_me_service",
+]
+
+

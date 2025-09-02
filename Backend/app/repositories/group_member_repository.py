@@ -1,23 +1,30 @@
-from app.models.user import User
-from app.repositories.base_repository import BaseRepository
-from app.models.group_member import GroupMember
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import Session, selectinload
 
+from app.models.user import User
+from app.models.group_member import GroupMember
+from app.repositories.base_repository import BaseRepository
 
 class GroupMemberRepository(BaseRepository[GroupMember]):
-    def __init__(self, db):
-        super().__init__(db, GroupMember)
+    def __init__(self, session: Session):
+        super().__init__(session, GroupMember)
 
-    def get_group_members_with_display_name(self, group_id:int, university_id:int, limit:int, offset:int):
+    def get_group_members_with_display_name(
+        self,
+        group_id: int,
+        university_id: int,
+        limit: int,
+        offset: int,
+    ) -> list[GroupMember]:
         return (
-            self.db.query(GroupMember)
-            .join(GroupMember.user)  # INNER JOIN – wymusi istnienie usera
-            .options(selectinload(GroupMember.user))  # gdyby lazy nie było joined
+            self.session.query(self.model)
+            .join(self.model.user)                              # INNER JOIN na relacji
+            .options(selectinload(self.model.user))             # prefetch użytkownika
             .filter(
-                GroupMember.group_id == group_id,
-                User.university_id == university_id
+                self.model.group_id == group_id,
+                User.university_id == university_id,
             )
-            .order_by(GroupMember.created_at)
-            .limit(limit).offset(offset)
+            .order_by(self.model.created_at)
+            .offset(offset)
+            .limit(limit)
             .all()
         )

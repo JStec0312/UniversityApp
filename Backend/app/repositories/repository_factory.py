@@ -1,11 +1,12 @@
 """
 Repository Factory module for creating repository instances.
 
-This module provides the RepositoryFactory class which follows the factory pattern
-to create and provide instances of various repository classes.
+Uwaga: repozytoria nie robią commitów; transakcjami zarządza warstwa serwisów.
 """
 
-from app.repositories.base_repository import BaseRepository
+from typing import TYPE_CHECKING
+from sqlalchemy.orm import Session
+
 from app.repositories.discount_repository import DiscountRepository
 from app.repositories.event_rsvp_repository import EventRSVPRepository
 from app.repositories.university_repository import UniversityRepository
@@ -18,145 +19,57 @@ from app.repositories.admin_repository import AdminRepository
 from app.repositories.group_member_repository import GroupMemberRepository
 from app.repositories.group_invitation_repository import GroupInvitationRepository
 
+if TYPE_CHECKING:
+    # tylko do typowania; unika cykli przy imporcie runtime
+    from app.repositories.group_repository import GroupRepository
+    from app.repositories.news_repository import NewsRepository
 
 
 class RepositoryFactory:
     """
     Factory class for creating repository instances.
-    
-    This class follows the Factory pattern to provide a single point of creation
-    for all repository objects, ensuring they are created with the correct database
-    session and dependencies.
     """
-    
-    def __init__(self, db):
-        """
-        Initialize the RepositoryFactory with a database session.
-        
-        Args:
-            db: SQLAlchemy database session to be used by all repositories
-        """
-        self.db = db
+
+    def __init__(self, session: Session):
+        self.session = session
 
     def get_discount_repository(self) -> DiscountRepository:
-        """
-        Create and return a DiscountRepository instance.
-        
-        Returns:
-            DiscountRepository: Repository for discount-related database operations
-        """
-        return DiscountRepository(self.db)
+        return DiscountRepository(self.session)
 
     def get_event_rsvp_repository(self) -> EventRSVPRepository:
-        """
-        Create and return an EventRSVPRepository instance.
-        
-        Returns:
-            EventRSVPRepository: Repository for event RSVP-related database operations
-        """
-        return EventRSVPRepository(self.db)
+        return EventRSVPRepository(self.session)
 
     def get_university_repository(self) -> UniversityRepository:
-        """
-        Create and return a UniversityRepository instance.
-        
-        Returns:
-            UniversityRepository: Repository for university-related database operations
-        """
-        return UniversityRepository(self.db)
+        return UniversityRepository(self.session)
 
     def get_faculty_repository(self) -> FacultyRepository:
-        """
-        Create and return a FacultyRepository instance.
-        
-        Returns:
-            FacultyRepository: Repository for faculty-related database operations
-        """
-        return FacultyRepository(self.db)
+        return FacultyRepository(self.session)
 
     def get_event_repository(self) -> EventRepository:
-        """
-        Create and return an EventRepository instance.
-        
-        Returns:
-            EventRepository: Repository for event-related database operations
-        """
-        return EventRepository(self.db)
+        return EventRepository(self.session)
 
     def get_user_repository(self) -> UserRepository:
-        """
-        Create and return a UserRepository instance.
-        
-        Returns:
-            UserRepository: Repository for user-related database operations
-        """
-        return UserRepository(self.db)
-    
+        return UserRepository(self.session)
+
     def get_student_repository(self) -> StudentRepository:
-        """
-        Create and return a StudentRepository instance.
-        
-        Returns:
-            StudentRepository: Repository for student-related database operations
-        """
-        return StudentRepository(self.db)
+        return StudentRepository(self.session)
 
     def get_admin_repository(self) -> AdminRepository:
-        """
-        Create and return an AdminRepository instance.
-        
-        Returns:
-            AdminRepository: Repository for admin-related database operations
-        """
-        return AdminRepository(self.db)
-    
+        return AdminRepository(self.session)
+
     def get_major_repository(self) -> MajorRepository:
-        """
-        Create and return a MajorRepository instance.
-        
-        Returns:
-            MajorRepository: Repository for major-related database operations
-        """
-        return MajorRepository(self.db)
-    
-    
-    
-    def get_group_repository(self) -> BaseRepository:
-        """
-        Create and return a GroupRepository instance.
-        
-        Returns:
-            BaseRepository: Repository for group-related database operations
-        """
+        return MajorRepository(self.session)
+
+    def get_group_repository(self) -> "GroupRepository":
         from app.repositories.group_repository import GroupRepository
-        return GroupRepository(self.db)
-    
-    def get_news_repository(self) -> BaseRepository:
-        """
-        Create and return a NewsRepository instance.
-        
-        Returns:
-            BaseRepository: Repository for news-related database operations
-        """
+        return GroupRepository(self.session)
+
+    def get_news_repository(self) -> "NewsRepository":
         from app.repositories.news_repository import NewsRepository
-        return NewsRepository(self.db)
-    
+        return NewsRepository(self.session)
 
     def get_group_member_repository(self) -> GroupMemberRepository:
-        """
-        Create and return a GroupMemberRepository instance.
-
-        Returns:
-            GroupMemberRepository: Repository for group member-related database operations
-        """
-        return GroupMemberRepository(self.db)
+        return GroupMemberRepository(self.session)
 
     def get_group_invitation_repository(self) -> GroupInvitationRepository:
-        """
-        Create and return a GroupInvitationRepository instance.
-
-        Returns:
-            GroupInvitationRepository: Repository for group invitation-related database operations
-        """
-        return GroupInvitationRepository(self.db)
-
+        return GroupInvitationRepository(self.session)

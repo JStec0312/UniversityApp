@@ -1,48 +1,54 @@
+from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
+
 from app.models.user import User
-from app.repositories.base_repository import BaseRepository
-from app.utils.enums.role_enum import RoleEnum
-from app.repositories.admin_repository import AdminRepository
-from app.repositories.student_repository import StudentRepository
 from app.models.student import Student
-from app.models.admin import Admin
-from typing import List
+from app.repositories.base_repository import BaseRepository
+from app.repositories.student_repository import StudentRepository
 
 class UserRepository(BaseRepository[User]):
-    
-    def __init__(self, db: Session):
-        super().__init__(db, User)
+    def __init__(self, session: Session):
+        super().__init__(session, User)
 
-    def get_by_email(self, email: str) -> User | None:
-        return (self.db.query(User)
-                .options(joinedload(User.student), joinedload(User.admin))
-                .filter(User.email == email)
-                .one_or_none())
-    
-    def get_by_username(self, username: str) -> List[User] | None:
-        return self.db.query(self.model).filter(self.model.display_name == username).all()
-    
-    def verify_user(self,  id: int) -> User | None:
-        user = self.get_by_id(id)
-        id = user.id
-        if user:
-            user.verified = True
-            self.db.commit()
-            self.db.refresh(user)
-            return user
-        return None
+    def get_by_email(self, email: str) -> Optional[User]:
+        return (
+            self.session.query(User)
+            .options(joinedload(User.student), joinedload(User.admin))
+            .filter(User.email == email)
+            .one_or_none()
+        )
 
-    def create_student(self, user_id:int,  faculty_id:int = None, major_id:int = None) -> User:
-        existing_user = self.get_by_id(user_id)
-        if  existing_user:
-            student_repo = StudentRepository(self.db)
-            student = Student(
-                user_id=user_id,
-                faculty_id=faculty_id,
-                major_id=major_id
-            )
-            new_student = student_repo.create(student)
-            return new_student
-        raise ValueError("User does not exist")
-    
+    def get_by_username(self, username: str) -> List[User]:
+        return (
+            self.session.query(self.model)
+            .filter(self.model.display_name == username)
+            .all()
+        )
 
+    def verify_user(self, id: int) -> Optional[User]:
+        """
+        Ustawia verified=True bez commit/refresh — transakcją zarządza serwis.
+        """
+        user = self.get_by_id(id, for_update=True)
+        if not user:
+            return None
+        user.verified = True
+        self.session.flush()
+        return user
+
+    def create_student(self, user_id: int, faculty_id: int | None = None, major_id: int | None = None) -> Student:
+        """
+        Tworzy rekord Student powiązany z istniejącym Userem.
+        Zwraca utworzony obiekt Student. Bez commit — robi to warstwa serwisu.
+        """
+        existing_user = self.get_by_id(user_id, for_update=True)
+        if not existing_user:
+            raise ValueError("User does not exist")
+
+        student_repo = StudentRepository(self.session)
+        student = Student(
+            user_id=user_id,
+            faculty_id=faculty_id,
+            major_id=major_id,
+        )
+        return student_repo.create(student)
