@@ -4,7 +4,7 @@ from typing import Optional
 from jose import jwt
 
 
-LOGIN_PATH = "/api/user/login"
+LOGIN_PATH = "/api/users/login"
 
 class Auth:
     
@@ -16,7 +16,7 @@ class Auth:
         return client
 
     def logout_via_endpoint(self, client):
-        response = client.post("/api/user/logout")
+        response = client.post("/api/users/logout")
         assert response.status_code == 200
         assert client.cookies.get("access_token") is None, "Access token was not removed"
         return client

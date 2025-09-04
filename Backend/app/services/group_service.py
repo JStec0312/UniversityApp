@@ -3,9 +3,9 @@ from sqlalchemy.exc import IntegrityError
 from app.models.group import Group
 from app.schemas.group import GroupCreateIn
 from app.core.service_errors import (
-    GroupAlreadyExistsException,
-    GroupHasDependenciesException,
-    GroupNotFoundException,
+    GroupAlreadyExistsError,
+    GroupHasDependenciesError,
+    GroupNotFoundError,
 )
 from app.repositories.group_repository import GroupRepository
 from app.utils.uow import uow
@@ -22,7 +22,7 @@ class GroupService:
                     Group(group_name=data.group_name, university_id=university_id)
                 )
         except IntegrityError as e:
-            raise GroupAlreadyExistsException("Group with this name already exists") from e
+            raise GroupAlreadyExistsError("Group with this name already exists") from e
 
     def get_groups_by_university_id(self, university_id: int, limit: int, offset: int) -> list[Group]:
         groups = self.group_repo.get_paginated_with_conditions(
@@ -31,7 +31,7 @@ class GroupService:
             limit=limit,
         )
         if not groups:
-            raise GroupNotFoundException("No groups found for this university")
+            raise GroupNotFoundError("No groups found for this university")
         return groups
 
     def delete_group(self, group_id: int, university_id: int) -> None:
@@ -39,11 +39,11 @@ class GroupService:
             with uow(self.session):
                 deleted_count = self.group_repo.delete_by_id_and_university(group_id, university_id)
         except IntegrityError as err:
-            raise GroupHasDependenciesException(
+            raise GroupHasDependenciesError(
                 "Group has dependencies and cannot be deleted"
             ) from err
 
         if deleted_count == 0:
-            raise GroupNotFoundException(
+            raise GroupNotFoundError(
                 "Group not found or does not belong to the specified university"
             )

@@ -1,6 +1,6 @@
 from typing import List
-from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
+from app.core.service_errors import NotFoundError, ForbiddenError
 
 from app.repositories.news_repository import NewsRepository
 from app.repositories.admin_repository import AdminRepository
@@ -40,7 +40,7 @@ class NewsService:
             order_by=(News.created_at.desc(),),  # krotka
         )
         if not items:
-            raise HTTPException(status_code=404, detail="No news found for this university")
+            raise NotFoundError(message="No news found for this university", code="NEWS_NOT_FOUND")
         return items
 
     def get_news_by_group(self, group_id: int, university_id: int, limit: int = 10, offset: int = 0) -> List[News]:
@@ -56,7 +56,7 @@ class NewsService:
             conditions=[News.id == news_id, News.university_id == university_id]
         )
         if news is None:
-            raise HTTPException(status_code=404, detail="News not found")
+            raise NotFoundError(message="News not found", code="NEWS_NOT_FOUND")
         return news
 
     # --- UPDATE ---
@@ -73,11 +73,11 @@ class NewsService:
         with uow(self.session):
             news = self.news_repository.get_by_id(news_id, for_update=True)
             if not news or news.university_id != university_id:
-                raise HTTPException(status_code=404, detail="News not found")
+                raise NotFoundError(message="News not found", code="NEWS_NOT_FOUND")
 
             if user_role != RoleEnum.SUPERIOR_ADMIN.value:
                 if admin_repo.get_group_id_by_user_id(user_id) != news.group_id:
-                    raise HTTPException(status_code=403, detail="You do not have permission to edit this news")
+                    raise ForbiddenError(message="You do not have permission to edit this news", code="NEWS_EDIT_FORBIDDEN")
 
             updated = self.news_repository.update_by_id(news_id, news_data.model_dump(exclude_unset=True))
 
@@ -96,11 +96,11 @@ class NewsService:
         with uow(self.session):
             news = self.news_repository.get_by_id(news_id, for_update=True)
             if not news or news.university_id != university_id:
-                raise HTTPException(status_code=404, detail="News not found")
+                raise NotFoundError(message="News not found", code="NEWS_NOT_FOUND")
 
             if user_role != RoleEnum.SUPERIOR_ADMIN.value:
                 if admin_repo.get_group_id_by_user_id(user_id) != news.group_id:
-                    raise HTTPException(status_code=403, detail="You do not have permission to delete this news")
+                    raise ForbiddenError(message="You do not have permission to delete this news", code="NEWS_DELETE_FORBIDDEN")
 
             self.news_repository.delete_by_id(news_id)
             # brak commit tutaj – transakcja zamknie się na wyjściu z with

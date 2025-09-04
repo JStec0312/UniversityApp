@@ -12,7 +12,5 @@ class Discount(BaseModel):
     description = Column(Text, nullable=False)
     link = Column(String(512))
     valid_until = Column(Date, nullable=False)
-    admin_id = Column(Integer, ForeignKey("admins.id"), nullable=False)
     
     # Relationships
-    admin = relationship("Admin", back_populates="discounts")

@@ -11,17 +11,18 @@ from app.repositories.group_repository import GroupRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.admin_repository import AdminRepository
 from app.core.service_errors import (
-    NoPermissionForInvitationException,
-    UserAlreadyInGroupException,
-    UserNotFoundException,
-    GroupNotFoundException,
+    InvitationPermissionError,
+    UserAlreadyInGroupError,
+    UserNotFoundError,
+    GroupNotFoundError,
     UserAlreadyInvitedError,
-    NotPermittedForThisInvitationException,
-    InvitationNotFoundException,
-    InvitationNotActiveException,
-    NoPermissionForMakingAdminException,
-    UserIsNotMemberOfGroupException,
-    UserIsAlreadyAdminException,
+    InvitationAccessError,
+    InvitationNotFoundError,
+    InvitationNotActiveError,
+    AdminPermissionError,
+    UserNotMemberError,
+    UserIsAlreadyAdminError,
+    PermissionError
 )
 from app.utils.enums.invitation_status_enum import InvitationStatus
 from app.utils.uow import uow
@@ -50,19 +51,19 @@ class GroupMembershipService:
 
     def invite_user_to_group(self, invited_user_id: int, inviter_user_id: int, group_id: int) -> GroupInvitation:
         if not self.group_repository.exists_with_conditions((Group.id == group_id,)):
-            raise GroupNotFoundException()
+            raise GroupNotFoundError()
 
         # czy zapraszający ma prawo (admin tej grupy)?
         if not self.admin_repository.exists_with_conditions((Admin.user_id == inviter_user_id, Admin.group_id == group_id)):
-            raise NoPermissionForInvitationException()
+            raise InvitationPermissionError()
 
         # czy zapraszany użytkownik istnieje?
         if not self.user_repository.get_by_id(invited_user_id):
-            raise UserNotFoundException()
+            raise UserNotFoundError()
 
         # czy już jest członkiem?
         if self.group_member_repository.exists_with_conditions((GroupMember.user_id == invited_user_id, GroupMember.group_id == group_id)):
-            raise UserAlreadyInGroupException()
+            raise UserAlreadyInGroupError()
 
         # czy już ma aktywne zaproszenie?
         if self.group_invitation_repository.exists_with_conditions(
@@ -85,21 +86,21 @@ class GroupMembershipService:
             if code == "23505":
                 raise UserAlreadyInvitedError()
             if code == "23503":
-                raise UserNotFoundException()
+                raise UserNotFoundError()
             raise
 
     def accept_group_invitation(self, invitation_id: int, user_id: int) -> GroupMember:
         with uow(self.session):
             inv = self.group_invitation_repository.get_by_id(invitation_id, for_update=True)
             if not inv:
-                raise InvitationNotFoundException()
+                raise InvitationNotFoundError()
             if inv.status != InvitationStatus.PENDING:
-                raise InvitationNotActiveException()
+                raise InvitationNotActiveError()
             if inv.invited_user_id != user_id:
-                raise NotPermittedForThisInvitationException()
+                raise InvitationAccessError()
 
             if self.group_member_repository.exists_with_conditions((GroupMember.user_id == user_id, GroupMember.group_id == inv.group_id)):
-                raise UserAlreadyInGroupException()
+                raise UserAlreadyInGroupError()
 
             try:
                 member = self.group_member_repository.create(GroupMember(user_id=user_id, group_id=inv.group_id))
@@ -108,9 +109,9 @@ class GroupMembershipService:
             except IntegrityError as e:
                 code = getattr(getattr(e, "orig", None), "pgcode", None)
                 if code == "23505":
-                    raise UserAlreadyInGroupException()
+                    raise UserAlreadyInGroupError()
                 if code == "23503":
-                    raise UserNotFoundException()
+                    raise UserNotFoundError()
                 raise
 
     # ----------------- MEMBERS -----------------
@@ -135,22 +136,52 @@ class GroupMembershipService:
                 (Admin.user_id == inviter_user_id, Admin.group_id == group_id)
             )
             if not (inviter_is_superior or inviter_is_admin):
-                raise NoPermissionForMakingAdminException()
+                raise AdminPermissionError()
 
             # zapraszany musi być członkiem tej grupy
             if not self.group_member_repository.exists_with_conditions(
                 (GroupMember.user_id == invited_user_id, GroupMember.group_id == group_id)
             ):
-                raise UserIsNotMemberOfGroupException()
+                raise UserNotMemberError()
 
             # czy już admin?
             if self.admin_repository.exists_with_conditions(
                 (Admin.user_id == invited_user_id, Admin.group_id == group_id)
             ):
-                raise UserIsAlreadyAdminException()
+                raise UserIsAlreadyAdminError()
 
             try:
                 admin = self.admin_repository.create(Admin(user_id=invited_user_id, group_id=group_id))
                 return admin
             except IntegrityError:
-                raise UserIsAlreadyAdminException()
+                raise UserIsAlreadyAdminError()
+
+    def get_group_admins(self, group_id: int, university_id: int) -> list[Admin]:
+        return self.group_member_repository.get_group_admins_with_display_name(
+            group_id=group_id,
+            university_id=university_id,
+            limit=100,
+            offset=0,
+        )
+    
+
+    def  get_group_invitations(self, group_id: int, user_id: int) -> list[GroupInvitation]:
+        # czy user jest adminem tej grupy?
+        if not self.admin_repository.exists_with_conditions((Admin.user_id == user_id, Admin.group_id == group_id)):
+            raise PermissionError("User does not have permission to see invitations for this group.")
+        
+        return self.group_invitation_repository.get_paginated_with_conditions((GroupInvitation.group_id == group_id,), limit=None, offset=None)
+    
+    def cancel_invitation(self, invitation_id: int, user_id: int) -> None:
+        # czy user jest adminem tej grupy?
+        inv = self.group_invitation_repository.get_by_id(invitation_id)
+        if not inv:
+            raise InvitationNotFoundError()
+        
+        if not self.admin_repository.exists_with_conditions((Admin.user_id == user_id, Admin.group_id == inv.group_id)):
+            raise AdminPermissionError("User does not have permission to cancel this invitation.")
+        
+        with uow(self.session):
+            self.group_invitation_repository.delete_by_id(invitation_id)
+            return None
+    

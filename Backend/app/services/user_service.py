@@ -1,12 +1,12 @@
 from app.models.user import User
 import re
 from app.core.service_errors import (
-    EmailAlreadyExistsException,
-    InvalidCredentialsException,
-    ServerErrorException,
-    UserAlreadyVerifiedException,
-    UserNotFoundException,
-    UserNotVerifiedException,
+    EmailAlreadyExistsError,
+    InvalidCredentialsError,
+    ServerError,
+    UserAlreadyVerifiedError,
+    UserNotFoundError,
+    UserNotVerifiedError,
 )
 from app.schemas.user import UserCreate, UserAuthIn
 from app.repositories.user_repository import UserRepository
@@ -41,16 +41,16 @@ class UserService:
                 return new_user
         except IntegrityError:
             # np. UNIQUE(email)
-            raise EmailAlreadyExistsException("Email already exists")
+            raise EmailAlreadyExistsError("Email already exists")
         except Exception:
-            raise ServerErrorException("Error creating user")
+            raise ServerError("Error creating user")
 
     def prepare_verification_token(self, user_id: int) -> tuple[str, str, str, str]:
         user = self.user_repository.get_by_id(user_id)
         if not user:
-            raise UserNotFoundException("User not found")
+            raise UserNotFoundError("User not found")
         if user.verified:
-            raise UserAlreadyVerifiedException("User already verified")
+            raise UserAlreadyVerifiedError("User already verified")
         token = create_verify_token(user_id)
         return token, user.email, user.display_name, user.university_id
 
@@ -60,7 +60,7 @@ class UserService:
     def get_user_email(self, user_id: int) -> str:
         user = self.user_repository.get_by_id(user_id)
         if not user:
-            raise UserNotFoundException("User not found")
+            raise UserNotFoundError("User not found")
         return user.email
 
     def get_user_by_id(self, user_id: int, university_id: int) -> UserOut:
@@ -68,7 +68,7 @@ class UserService:
             conditions=(User.id == user_id, User.university_id == university_id)
         )
         if user is None:
-            raise UserNotFoundException("User not found")
+            raise UserNotFoundError("User not found")
         return user
 
     @staticmethod
@@ -112,13 +112,13 @@ class UserService:
     def authenticate_user(self, user_in: UserAuthIn) -> tuple[User, list[str]]:
         user = self.user_repository.get_by_email(user_in.email)
         if not user:
-            raise UserNotFoundException("User not found")
+            raise UserNotFoundError("User not found")
 
         if not getattr(user, "verified", False):
-            raise UserNotVerifiedException("User not verified")
+            raise UserNotVerifiedError("User not verified")
 
         if not bcrypt.verify(user_in.password, user.hashed_password):
-            raise InvalidCredentialsException("Invalid credentials")
+            raise InvalidCredentialsError("Invalid credentials")
 
         roles: list[str] = []
         if getattr(user, "admin", None):

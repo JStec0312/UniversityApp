@@ -13,8 +13,6 @@ class Group(BaseModel):
     # Relationships
     university = relationship("University", back_populates="groups")  # Link to the university
     # Use string reference to avoid circular import
-    admins = relationship("Admin", back_populates="group", passive_deletes=True)  # Administrators of this group
     events = relationship("Event", back_populates="group", passive_deletes=True)  # Events associated with this group
     news = relationship("News", back_populates="group", passive_deletes=True)  # News posts associated with this group
-    superior_admins = relationship("SuperiorAdmin", back_populates="group", passive_deletes=True)  # Superior administrators of this group
     members = relationship("GroupMember", back_populates="group", passive_deletes=True)  # Members of this group

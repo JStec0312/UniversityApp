@@ -7,7 +7,7 @@ def test_get_group_by_uni_id(client, sc_with_multiple_groups, auth):
     group_from_university1 = scenario["groups_from_university1"]
     user, password = scenario["user"]
     auth.login_via_endpoint(client, email=user.email, password=password)
-    endpoint_path = "/api/group/"
+    endpoint_path = "/api/groups/"
     response = client.get(endpoint_path)
     assert response.status_code == 200
     response_data = response.json()
@@ -20,7 +20,7 @@ def test_create_group(client, sc_with_multiple_groups, auth):
     scenario = sc_with_multiple_groups
     user, password = scenario["user"]
     auth.login_via_endpoint(client, email=user.email, password=password)
-    endpoint_path = "/api/group/"
+    endpoint_path = "/api/groups/"
     create_group_data = {
         "group_name": "Test added group",
     }
@@ -38,7 +38,7 @@ def test_delete_group(client, sc_with_multiple_groups, auth):
     user, password = scenario["user"]
     auth.login_via_endpoint(client, email=user.email, password=password)
     groups = scenario["groups_from_university1"]
-    endpoint_path = "/api/group/"
+    endpoint_path = "/api/groups/"
     response = client.delete(f"{endpoint_path}{groups[1].id}/") #Tutaj jest błąd (grupa ma zależności)
     assert response.status_code == 204
     #check if the group0 was actually deleted

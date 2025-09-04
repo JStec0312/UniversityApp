@@ -11,7 +11,7 @@ def test_create_verify_and_login_as_user(client, sc_no_users, db_session):
         "display_name" : "test_user",        
     }
     #register
-    register_response = client.post("/api/user", json={
+    register_response = client.post("/api/users", json={
         "email": user_data["email"],
         "password": user_data["password"],
         "university_id": user_data["university_id"],
@@ -24,12 +24,12 @@ def test_create_verify_and_login_as_user(client, sc_no_users, db_session):
     token = create_verify_token(int(register_response.json()["id"]))
 
     #verify
-    verify_response = client.post("/api/user/student/verify", json={"token": token})
+    verify_response = client.post("/api/users/students/verify", json={"token": token})
     assert verify_response.status_code == 200
 
 
     #login
-    login_response = client.post("/api/user/login", json={
+    login_response = client.post("/api/users/login", json={
         "email": user_data["email"],
         "password": user_data["password"]
     })
@@ -41,8 +41,7 @@ def test_get_email(client, sc_with_verified_user_student, auth):
     user, password = scenario["user"]
     client =  auth.login_via_endpoint(client, email=user.email, password=password)
     assert client.cookies.get("access_token") is not None, "No access token in cookies" #tutaj przechodzi
-    access_token = client.cookies.get("access_token")
-    response = client.get("/api/user/email")
+    response = client.get("/api/users/email")
     assert response.status_code == 200
     assert response.json() == {'email': user.email}
 
@@ -53,7 +52,7 @@ def test_search_users(client,  sc_with_verified_user_student , auth):
     user, password = scenario["user"]
     client =  auth.login_via_endpoint(client, email=user.email, password=password)
 
-    response = client.get("/api/user/search", params={"name": "Test User"})
+    response = client.get("/api/users/search", params={"name": "Test User"})
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
@@ -63,7 +62,7 @@ def test_get_user(client, sc_with_verified_user_student, auth):
     user, password = scenario["user"]
     client =  auth.login_via_endpoint(client, email=user.email, password=password)
 
-    response = client.get("/api/user/1")
+    response = client.get("/api/users/1")
     assert response.status_code == 200
     assert response.json()["id"] == user.id
     assert response.json()["display_name"] == user.display_name

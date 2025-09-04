@@ -18,16 +18,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 # User, Student, and Admin API Routers
-app.include_router(user_api.router, prefix="/api/user", tags=["users"])
-app.include_router(student_api.router, prefix="/api/user/student", tags=["students"])
-app.include_router(admin_api.router, prefix="/api/user/admin", tags=["admins"])
+app.include_router(user_api.router, prefix="/api/users", tags=["users"])
+app.include_router(student_api.router, prefix="/api/users/students", tags=["students"])
+app.include_router(admin_api.router, prefix="/api/users/admins", tags=["admins"])
 
-app.include_router(university_api.router, prefix="/api/university", tags=["universities"])
-app.include_router(faculty_api.router, prefix="/api/university", tags=["faculties"])
-app.include_router(major_api.router, prefix="/api/university", tags=["majors"])
+app.include_router(university_api.router, prefix="/api/universities", tags=["universities"])
+app.include_router(faculty_api.router, prefix="/api/universities", tags=["faculties"])
+app.include_router(major_api.router, prefix="/api/universities", tags=["majors"])
 
-app.include_router(group_api.router, prefix="/api/group", tags=["groups"])
-app.include_router(group_membership_api.router, prefix="/api/group", tags=["group_memberships"])
-app.include_router(event_api.router, prefix="/api/event", tags=["events"])
+app.include_router(group_api.router, prefix="/api/groups", tags=["groups"])
+app.include_router(group_membership_api.router, prefix="/api/groups", tags=["group_memberships"])
+app.include_router(event_api.router, prefix="/api/events", tags=["events"])
 app.include_router(news_api.router, prefix="/api/news", tags=["news"])
 app.include_router(me_api.router, prefix="/api/me", tags=["me"])

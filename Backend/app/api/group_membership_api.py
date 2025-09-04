@@ -13,13 +13,6 @@ from app.services.service_factory import get_group_membership_service
 
 router = APIRouter()
 
-# @router.get("/{group_id}/invitations", response_model=list[GroupInviteOut], status_code=200)
-# def get_group_invitations(
-#     group_id: int,
-#     user = require.all,
-#     svc: GroupMembershipService = Depends(get_group_membership_service),
-# ):
-#     return svc.get_group_invitations(group_id=group_id)
 
 @router.post("/{group_id}/invitations", response_model=GroupInviteOut, status_code=201)
 def invite_to_group(
@@ -57,7 +50,7 @@ def get_group_members(
         offset=offset,
     )
 
-@router.post("/{group_id}/admin", response_model=AdminOut, status_code=201)
+@router.post("/{group_id}/admins", response_model=AdminOut, status_code=201)
 def make_user_admin(
     group_id: int,
     admin_data: GroupAdminCreate,
@@ -69,3 +62,30 @@ def make_user_admin(
         invited_user_id=admin_data.invited_user_id,
         inviter_user_id=user["user_id"],
     )
+
+@router.get("/{group_id}/admins", response_model=list[GroupMemberOutDisplayName], status_code=200)
+def get_group_admins(
+    group_id: int,
+    user = require.all,
+    svc: GroupMembershipService = Depends(get_group_membership_service),
+):
+    return svc.get_group_admins(group_id=group_id, university_id=user["university_id"])
+
+@router.get("/{group_id}/invitations", response_model=list[GroupInviteOut], status_code=200)
+def get_group_invitations(
+    group_id: int,
+    user = require.admin,
+    svc: GroupMembershipService = Depends(get_group_membership_service),
+):
+    return svc.get_group_invitations(group_id=group_id, user_id=user["user_id"])
+
+
+@router.delete("/invitations/{invitation_id}", status_code=204)
+def cancel_invitation(
+    invitation_id: int,
+    user = require.admin_or_superior,
+    svc: GroupMembershipService = Depends(get_group_membership_service),
+):
+    svc.cancel_invitation(invitation_id=invitation_id, user_id=user["user_id"])
+    return None
+
